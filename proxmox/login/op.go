@@ -73,6 +73,7 @@ func (pl *ProxmoxLoginRequest) doLogin() (*ProxmoxSubject, error) {
 		Username:  respData["data"].(map[string]interface{})["username"].(string),
 		CSRFToken: respData["data"].(map[string]interface{})["CSRFPreventionToken"].(string),
 		Ticket:    respData["data"].(map[string]interface{})["ticket"].(string),
+		ApiServer: pl.ApiServer,
 	}
 
 	fmt.Fprintf(os.Stdout, "User '%s' successfully logged in.\n", subject.Username)
@@ -84,6 +85,7 @@ type ProxmoxSubject struct {
 	Username  string `json:"username"`
 	Ticket    string `json:"ticket"`
 	CSRFToken string `json:"csrf_token"`
+	ApiServer string `json:"api_server"`
 }
 
 // Write session information to file at given path in (pretty) JSON format.
