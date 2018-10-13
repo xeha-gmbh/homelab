@@ -1,43 +1,63 @@
 package login
 
 import (
-	"fmt"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 )
 
 const (
-	FlagUsername = "username"
-	FlagPassword = "password"
+	FlagUsername  = "username"
+	FlagPassword  = "password"
+	FlagRealm     = "realm"
 	FlagApiServer = "api-server"
+	FlagForce     = "force"
 
-	DefaultUsername = "root@pam"
+	DefaultUsername = "root"
+	DefaultRealm    = "pam"
+	DefaultForce    = false
+
+	TicketCache = ".proxmox"
 )
 
+// Returns the 'login' command. This command expects to be installed
+// as a sub-command where 'cmd.ParseFlags' has been called.
 func NewProxmoxLoginCommand() *cobra.Command {
-	payload := &ProxmoxLoginPayload{}
+	payload := &ProxmoxLoginRequest{}
 
 	cmd := &cobra.Command{
-		Use: "login",
+		Use:   "login",
 		Short: "login user with username and password",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmd.ParseFlags(args); err != nil {
-				return nil
+			var (
+				err          error
+				subject      *ProxmoxSubject
+				isNewAttempt bool
+			)
+
+			subject, isNewAttempt, err = payload.Login()
+			if err != nil {
+				return handleError(err)
 			}
 
-			fmt.Println(payload.Username, payload.Password, payload.ApiServer)
+			if isNewAttempt {
+				err = subject.WriteToFile(proxmoxTicketCache())
+				if err != nil {
+					return handleError(err)
+				}
+			}
 
 			return nil
 		},
 	}
 
 	addProxmoxLoginCommandFlags(cmd.PersistentFlags(), payload)
-	markProxmoxLoginRequiredFlags(cmd)
+	markProxmoxLoginCommandRequiredFlags(cmd)
 
 	return cmd
 }
 
-func markProxmoxLoginRequiredFlags(cmd *cobra.Command) {
+// Mark required login command flags
+func markProxmoxLoginCommandRequiredFlags(cmd *cobra.Command) {
 	for _, f := range []string{
 		FlagPassword,
 		FlagApiServer,
@@ -47,24 +67,26 @@ func markProxmoxLoginRequiredFlags(cmd *cobra.Command) {
 	}
 }
 
-// Bind proxmox login command flags to ProxmoxLoginPayload structure.
-func addProxmoxLoginCommandFlags(flagSet *flag.FlagSet, payload *ProxmoxLoginPayload) {
+// Bind proxmox login command flags to ProxmoxLoginRequest structure.
+func addProxmoxLoginCommandFlags(flagSet *flag.FlagSet, payload *ProxmoxLoginRequest) {
 	flagSet.StringVar(
 		&payload.Username, FlagUsername, DefaultUsername,
 		"The username that is authorized to carry out subsequent operations.",
-		)
+	)
 	flagSet.StringVar(
 		&payload.Password, FlagPassword, "",
 		"The password for the user. Required.",
-		)
+	)
+	flagSet.StringVar(
+		&payload.Realm, FlagRealm, DefaultRealm,
+		"The realm in Proxmox to log into.",
+	)
 	flagSet.StringVar(
 		&payload.ApiServer, FlagApiServer, "",
 		"The address for the Proxmox API server. API paths will be appended to this address. Required.",
-		)
-}
-
-type ProxmoxLoginPayload struct {
-	Username	string
-	Password 	string
-	ApiServer 	string
+	)
+	flagSet.BoolVar(
+		&payload.Force, FlagForce, DefaultForce,
+		"If set, command will ignore existing ticket cache and force a re-login.",
+	)
 }

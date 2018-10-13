@@ -13,6 +13,12 @@ func NewLabCommand() *cobra.Command {
 	cmds := &cobra.Command{
 		Use:   "lab",
 		Short: "lab: easily configure the lab environment",
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			if err := cmd.ParseFlags(args); err != nil {
+				return err
+			}
+			return nil
+		},
 	}
 
 	cmds.ResetFlags()
@@ -30,11 +36,10 @@ func Run() error {
 	return cmd.Execute()
 }
 
-func main()  {
+func main() {
 	if err := Run(); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
 	os.Exit(0)
 }
-
