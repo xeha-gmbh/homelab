@@ -2,6 +2,7 @@ package proxmox
 
 import (
 	"github.com/imulab/homelab/proxmox/login"
+	"github.com/imulab/homelab/proxmox/upload"
 	"github.com/spf13/cobra"
 )
 
@@ -15,6 +16,7 @@ func NewProxmoxCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(login.NewProxmoxLoginCommand())
+	cmd.AddCommand(upload.NewProxmoxUploadCommand())
 
 	return cmd
 }

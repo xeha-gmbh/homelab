@@ -1,6 +1,7 @@
 package login
 
 import (
+	"github.com/imulab/homelab/proxmox/common"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 )
@@ -15,8 +16,6 @@ const (
 	DefaultUsername = "root"
 	DefaultRealm    = "pam"
 	DefaultForce    = false
-
-	TicketCache = ".proxmox"
 )
 
 // Returns the 'login' command. This command expects to be installed
@@ -30,19 +29,19 @@ func NewProxmoxLoginCommand() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var (
 				err          error
-				subject      *ProxmoxSubject
+				subject      *common.ProxmoxSubject
 				isNewAttempt bool
 			)
 
 			subject, isNewAttempt, err = payload.Login()
 			if err != nil {
-				return handleError(err)
+				return common.HandleError(err)
 			}
 
 			if isNewAttempt {
-				err = subject.WriteToFile(proxmoxTicketCache())
+				err = common.WriteSubjectToCache(subject)
 				if err != nil {
-					return handleError(err)
+					return common.HandleError(err)
 				}
 			}
 
