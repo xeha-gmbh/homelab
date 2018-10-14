@@ -1,9 +1,11 @@
 package upload
 
 import (
+	"errors"
 	"github.com/imulab/homelab/proxmox/common"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
+	"os/exec"
 )
 
 const (
@@ -21,6 +23,12 @@ func NewProxmoxUploadCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "upload",
 		Short: "upload file to Proxmox storage device",
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			if err := checkCurlIsOnPath(); err != nil {
+				return common.HandleError(err)
+			}
+			return nil
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var (
 				err error
@@ -72,4 +80,11 @@ func addProxmoxLoginCommandFlags(flagSet *flag.FlagSet, payload *ProxmoxUploadRe
 		&payload.Format, FlagFormat, DefaultFormat,
 		"The format of the file specified.",
 	)
+}
+
+func checkCurlIsOnPath() error {
+	if _, err := exec.LookPath("curl"); err != nil {
+		return common.GenericError(errors.New("curl is not installed"))
+	}
+	return nil
 }
