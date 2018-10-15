@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/imulab/homelab/iso"
 	"github.com/imulab/homelab/proxmox"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -23,6 +24,7 @@ func NewLabCommand() *cobra.Command {
 
 	cmds.ResetFlags()
 	cmds.AddCommand(proxmox.NewProxmoxCommand())
+	cmds.AddCommand(iso.NewIsoCommand())
 
 	return cmds
 }
