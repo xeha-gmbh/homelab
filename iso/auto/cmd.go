@@ -1,8 +1,10 @@
 package auto
 
 import (
-	"errors"
 	"fmt"
+	"github.com/imulab/homelab/iso/auto/shared"
+	"github.com/imulab/homelab/iso/auto/ubuntu"
+	"github.com/imulab/homelab/iso/common"
 	"github.com/lithammer/dedent"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
@@ -32,32 +34,8 @@ const (
 	noDefault = ""
 )
 
-var (
-	allProviders = make([]Provider, 0)
-)
-
-type Payload struct {
-	// flavor of the OS
-	Flavor 		string
-	// path to the input ISO
-	InputIso 	string
-	// path of the output files
-	OutputPath 	string
-	// name of the output ISO file
-	OutputName 	string
-	// if should be made bootable via USB
-	UsbBoot		bool
-
-	// Attributes of the new user
-	Timezone 	string
-	Username 	string
-	Password 	string
-	Hostname 	string
-	Domain 		string
-}
-
 func NewIsoAutoCommand() *cobra.Command {
-	payload := &Payload{}
+	payload := &shared.Payload{}
 
 	cmd := &cobra.Command{
 		Use: "auto",
@@ -72,16 +50,18 @@ func NewIsoAutoCommand() *cobra.Command {
 			the way. This command is largely based on the work of neston.
 		`),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			for _, provider := range allProviders {
+			for _, provider := range []shared.Provider{
+				&ubuntu.AutoIsoUbuntuProvider{},
+			} {
 				if provider.SupportsFlavor(payload.Flavor) {
-					if _, err := provider.CheckDependencies(); err != nil {
+					if _, err := provider.CheckDependencies(payload); err != nil {
 						fmt.Fprintf(os.Stdout, "provider skipped due to unmet dependency: %s\n", err.Error())
 						continue
 					}
-					return handleError(provider.RemasterISO(payload))
+					return common.HandleError(provider.RemasterISO(payload))
 				}
 			}
-			return handleError(errors.New(errorNoProvider))
+			return common.HandleError(shared.NoProviderError{})
 		},
 	}
 
@@ -104,7 +84,7 @@ func markProxmoxLoginCommandRequiredFlags(cmd *cobra.Command) {
 }
 
 // Bind 'iso auto' command flags to Payload structure.
-func addProxmoxLoginCommandFlags(flagSet *flag.FlagSet, payload *Payload) {
+func addProxmoxLoginCommandFlags(flagSet *flag.FlagSet, payload *shared.Payload) {
 	flagSet.StringVar(&payload.Flavor, FlagFlavor, DefaultFlavor,
 		"An identification string for the OS. [ubuntu/bionic64 | ubuntu/xenial64]")
 	flagSet.StringVar(&payload.InputIso, FlagInputIso, noDefault,

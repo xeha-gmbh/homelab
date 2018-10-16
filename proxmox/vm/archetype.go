@@ -6,7 +6,7 @@ import (
 )
 
 // list archetype command
-// each payload is specific to an archetype, but shares common logic -> interface
+// each payload is specific to an archetype, but shares shared logic -> interface
 
 // Description of a collection of VM configuration options.
 // It is designed to ease the VM creation process by only exposing a small amount of configurable
