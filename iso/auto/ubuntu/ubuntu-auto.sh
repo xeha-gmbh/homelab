@@ -244,7 +244,7 @@ debug "seed file $SEED checksum is $seed_checksum"
 sed -i "/label live/ilabel autoinstall\n\
   menu label ^Autoinstall Imulab Ubuntu Server\n\
   kernel /casper/vmlinuz\n\
-  append file=/cdrom/preseed/ubuntu-server.seed initrd=/install/initrd.gz auto=true priority=high preseed/file=/cdrom/preseed/imulab.seed preseed/file/checksum=$seed_checksum --" $WORKSPACE/$NEW_ISO_DIR/isolinux/txt.cfg
+  append file=/cdrom/preseed/ubuntu-server.seed initrd=/casper/initrd auto=true priority=high preseed/file=/cdrom/preseed/imulab.seed preseed/file/checksum=$seed_checksum --" $WORKSPACE/$NEW_ISO_DIR/isolinux/txt.cfg
 debug "isolinux cfg file $WORKSPACE/$NEW_ISO_DIR/isolinux/txt.cfg updated"
 
 # create iso image
