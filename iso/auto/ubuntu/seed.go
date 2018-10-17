@@ -50,7 +50,8 @@ d-i passwd/root-login                                       boolean     false
 d-i passwd/make-user                                        boolean     true
 d-i passwd/user-fullname                                    string      {{.Username}}
 d-i passwd/username                                         string      {{.Username}}
-d-i passwd/user-password-crypted                            password    {{.Password}}
+d-i passwd/user-password 									password 	{{.Password}}
+d-i passwd/user-password-again 								password	{{.Password}}
 d-i passwd/user-uid                                         string
 d-i user-setup/allow-password-weak                          boolean     false
 d-i passwd/user-default-groups                              string      adm cdrom dialout lpadmin plugdev sambashare

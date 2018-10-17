@@ -105,6 +105,7 @@ cleanup()
 	fi
 	rm -rf "$WORKSPACE/$OLD_ISO_DIR" > /dev/null 2>&1
 	rm -rf "$WORKSPACE/$NEW_ISO_DIR" > /dev/null 2>&1
+	rm -f "$WORKSPACE/imulab.seed" > /dev/null 2>&1
 
 	debug "cleaned up."
 }

@@ -1,7 +1,6 @@
 package ubuntu
 
 import (
-	"fmt"
 	"github.com/imulab/homelab/iso/auto/shared"
 	"io"
 	"net/http"
@@ -88,11 +87,6 @@ func (p *AutoIsoUbuntuProvider) RemasterISO(payload *shared.Payload) error {
 		payload.Flavor = "-"
 	}
 
-	// hash password
-	if err := hashPassword(payload); err != nil {
-		return err
-	}
-
 	// parse template
 	parsedSeed, err := parseTemplateAndWriteToFile(payload)
 	if err != nil {
@@ -124,19 +118,6 @@ func (p *AutoIsoUbuntuProvider) RemasterISO(payload *shared.Payload) error {
 	}
 	if err := remaster.Wait(); err != nil {
 		return NewGenericError(err.Error())
-	}
-
-	return nil
-}
-
-func hashPassword(payload *shared.Payload) error {
-	cmd := exec.Command("/bin/sh", "-c",
-		fmt.Sprintf("echo %s | mkpasswd -s -m sha-512", payload.Password))
-
-	if output, err := cmd.Output(); err != nil {
-		return NewGenericError(err.Error())
-	} else {
-		payload.Password = string(output)
 	}
 
 	return nil
