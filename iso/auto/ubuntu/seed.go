@@ -1,6 +1,6 @@
 package ubuntu
 
-const seed = `
+const seedTmpl = `
 # regional setting
 d-i debian-installer/language                               string      en_US:en
 d-i debian-installer/country                                string      US

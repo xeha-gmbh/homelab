@@ -243,7 +243,7 @@ debug "seed file $SEED checksum is $seed_checksum"
 # update menu
 sed -i "/label live/ilabel autoinstall\n\
   menu label ^Autoinstall Imulab Ubuntu Server\n\
-  kernel /install/vmlinuz\n\
+  kernel /casper/vmlinuz\n\
   append file=/cdrom/preseed/ubuntu-server.seed initrd=/install/initrd.gz auto=true priority=high preseed/file=/cdrom/preseed/imulab.seed preseed/file/checksum=$seed_checksum --" $WORKSPACE/$NEW_ISO_DIR/isolinux/txt.cfg
 debug "isolinux cfg file $WORKSPACE/$NEW_ISO_DIR/isolinux/txt.cfg updated"
 
@@ -259,6 +259,10 @@ pushd $WORKSPACE/$NEW_ISO_DIR > /dev/null
 		 -boot-info-table \
 		 -o $WORKSPACE/$NEW_ISO_NAME . > /dev/null 2>&1
 popd > /dev/null
+if [[ $BOOTABLE == "y" ]]; then
+    isohybrid $WORKSPACE/$NEW_ISO_NAME
+    debug "made $WORKSPACE/$NEW_ISO_NAME bootable via usb"
+fi
 
 # clean before exit
 if [[ $DEBUG == 'n' ]]; then

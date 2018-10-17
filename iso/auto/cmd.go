@@ -87,12 +87,8 @@ func markProxmoxLoginCommandRequiredFlags(cmd *cobra.Command) {
 func addProxmoxLoginCommandFlags(flagSet *flag.FlagSet, payload *shared.Payload) {
 	flagSet.StringVar(&payload.Flavor, FlagFlavor, DefaultFlavor,
 		"An identification string for the OS. [ubuntu/bionic64 | ubuntu/xenial64]")
-	flagSet.StringVar(&payload.InputIso, FlagInputIso, noDefault,
-		"Path to the original ISO image.")
 	flagSet.StringVar(&payload.OutputPath, FlagOutputPath, DefaultOutputPath,
 		"Path where output files should be placed.")
-	flagSet.StringVar(&payload.OutputName, FlagOutputName, noDefault,
-		"Name of the output remastered ISO image. Determined by provider if unset.")
 	flagSet.BoolVar(&payload.UsbBoot, FlagUsbBoot, DefaultUsbBoot,
 		"Whether the output ISO image should be made boot-able via USB.")
 	flagSet.StringVar(&payload.Timezone, FlagTimezone, DefaultTimeZone,
