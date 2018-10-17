@@ -19,7 +19,16 @@ d-i debconf/language                                        string      en_US:en
 
 # network settings
 d-i netcfg/choose_interface                                 select      auto
+{{if eq .IpAddress ""}}
 d-i netcfg/dhcp_timeout                                     string      5
+{{else}}
+d-i netcfg/disable_autoconfig 								boolean 	true
+d-i netcfg/get_ipaddress 									string 		{{.IpAddress}}
+d-i netcfg/get_netmask 										string 		{{.NetMask}}
+d-i netcfg/get_gateway 										string 		{{.Gateway}}
+d-i netcfg/get_nameservers 									string 		{{.NameServers}}
+d-i netcfg/confirm_static 									boolean 	true
+{{end}}
 d-i netcfg/get_hostname                                     string      {{.Hostname}}
 d-i netcfg/get_domain                                       string      {{.Domain}}
 

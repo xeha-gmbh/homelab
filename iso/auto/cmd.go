@@ -12,24 +12,28 @@ import (
 )
 
 const (
-	FlagFlavor 		= "flavor"
-	FlagInputIso	= "iso"
-	FlagOutputPath	= "target-dir"
-	FlagOutputName 	= "target-name"
-	FlagUsbBoot 	= "usb-boot"
-	FlagTimezone 	= "timezone"
-	FlagUsername 	= "username"
-	FlagPassword	= "password"
-	FlagHostname 	= "hostname"
-	FlagDomain 		= "domain"
+	FlagFlavor      = "flavor"
+	FlagInputIso    = "iso"
+	FlagOutputPath  = "target-dir"
+	FlagUsbBoot     = "usb-boot"
+	FlagTimezone    = "timezone"
+	FlagUsername    = "username"
+	FlagPassword    = "password"
+	FlagHostname    = "hostname"
+	FlagDomain      = "domain"
+	FlagIpAddress   = "ip-address"
+	FlagNetMask     = "net-mask"
+	FlagGateway     = "gateway"
+	FlagNameServers = "name-servers"
 
-	DefaultFlavor			= "ubuntu/bionic64"
-	DefaultOutputPath		= "/tmp"
-	DefaultOutputNameTmpl	= "%s-unattended.iso"
-	DefaultUsbBoot 			= true
-	DefaultTimeZone 		= "America/Toronto"
-	DefaultUsername 		= "imulab"
-	DefaultDomain 			= "home.local"
+	DefaultFlavor      = "ubuntu/bionic64"
+	DefaultOutputPath  = "/tmp"
+	DefaultUsbBoot     = true
+	DefaultTimeZone    = "America/Toronto"
+	DefaultUsername    = "imulab"
+	DefaultDomain      = "home.local"
+	DefaultNetMask     = "255.255.255.0"
+	DefaultNameServers = "8.8.8.8"
 
 	noDefault = ""
 )
@@ -65,14 +69,14 @@ func NewIsoAutoCommand() *cobra.Command {
 		},
 	}
 
-	addProxmoxLoginCommandFlags(cmd.Flags(), payload)
-	markProxmoxLoginCommandRequiredFlags(cmd)
+	addIsoAutoCommandFlags(cmd.Flags(), payload)
+	markIsoAutoCommandRequiredFlags(cmd)
 
 	return cmd
 }
 
 // Mark required auto command flags
-func markProxmoxLoginCommandRequiredFlags(cmd *cobra.Command) {
+func markIsoAutoCommandRequiredFlags(cmd *cobra.Command) {
 	for _, f := range []string{
 		FlagInputIso,
 		FlagPassword,
@@ -84,7 +88,7 @@ func markProxmoxLoginCommandRequiredFlags(cmd *cobra.Command) {
 }
 
 // Bind 'iso auto' command flags to Payload structure.
-func addProxmoxLoginCommandFlags(flagSet *flag.FlagSet, payload *shared.Payload) {
+func addIsoAutoCommandFlags(flagSet *flag.FlagSet, payload *shared.Payload) {
 	flagSet.StringVar(&payload.Flavor, FlagFlavor, DefaultFlavor,
 		"An identification string for the OS. [ubuntu/bionic64 | ubuntu/xenial64]")
 	flagSet.StringVar(&payload.OutputPath, FlagOutputPath, DefaultOutputPath,
@@ -101,4 +105,13 @@ func addProxmoxLoginCommandFlags(flagSet *flag.FlagSet, payload *shared.Payload)
 		"Hostname of the new system.")
 	flagSet.StringVar(&payload.Domain, FlagDomain, DefaultDomain,
 		"Domain of the new system.")
+	flagSet.StringVar(&payload.IpAddress, FlagIpAddress, noDefault,
+		"Ip address of the new system. Leave blank for DHCP auto configuration. " +
+		"If set, should also set --net-mask, --gateway, and --name-servers")
+	flagSet.StringVar(&payload.NetMask, FlagNetMask, DefaultNetMask,
+		"Network mask of the specified network.")
+	flagSet.StringVar(&payload.Gateway, FlagGateway, noDefault,
+		"Network gateway of the specified network.")
+	flagSet.StringVar(&payload.NameServers, FlagNameServers, DefaultNameServers,
+		"A list of comma delimited DNS servers.")
 }

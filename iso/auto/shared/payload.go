@@ -14,4 +14,8 @@ type Payload struct {
 	Password 	string
 	Hostname 	string
 	Domain 		string
+	IpAddress 	string
+	NetMask 	string
+	Gateway 	string
+	NameServers string
 }

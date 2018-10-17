@@ -7,7 +7,7 @@ FLAVOR=-
 FLAVOR_BIONIC_64=bionic64
 FLAVOR_XENIAL_64=xenial64
 DOWNLOAD_URL="-"
-DOWNLOAD_BIONIC_64_URL="http://releases.ubuntu.com/bionic/ubuntu-18.04.1-live-server-amd64.iso"
+DOWNLOAD_BIONIC_64_URL="http://cdimage.ubuntu.com/ubuntu/releases/18.04/release/ubuntu-18.04.1-server-amd64.iso"
 DOWNLOAD_XENIAL_64_URL="http://releases.ubuntu.com/xenial/ubuntu-16.04.5-server-amd64.iso"
 OLD_ISO_DIR="iso_old"
 NEW_ISO_DIR="iso_new"
@@ -240,11 +240,11 @@ debug "seed file $SEED copied to $WORKSPACE/$NEW_ISO_DIR/preseed/imulab.seed"
 seed_checksum=$(md5sum $WORKSPACE/$NEW_ISO_DIR/preseed/imulab.seed | awk '{ print $1 }')
 debug "seed file $SEED checksum is $seed_checksum"
 
-# update menu
-sed -i "/label live/ilabel autoinstall\n\
+# update install menu
+sed -i "/label install/ilabel autoinstall\n\
   menu label ^Autoinstall Imulab Ubuntu Server\n\
-  kernel /casper/vmlinuz\n\
-  append file=/cdrom/preseed/ubuntu-server.seed initrd=/casper/initrd auto=true priority=high preseed/file=/cdrom/preseed/imulab.seed preseed/file/checksum=$seed_checksum --" $WORKSPACE/$NEW_ISO_DIR/isolinux/txt.cfg
+  kernel /install/vmlinuz\n\
+  append file=/cdrom/preseed/ubuntu-server.seed initrd=/install/initrd.gz auto=true priority=high preseed/file=/cdrom/preseed/imulab.seed preseed/file/checksum=$seed_checksum --" $WORKSPACE/$NEW_ISO_DIR/isolinux/txt.cfg
 debug "isolinux cfg file $WORKSPACE/$NEW_ISO_DIR/isolinux/txt.cfg updated"
 
 # create iso image
