@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	ProxmoxCSRFTokenHeader = "CSRFPreventionToken"
+	ProxmoxCSRFTokenHeader  = "CSRFPreventionToken"
 	ProxmoxTicketCookieName = "PVEAuthCookie"
 )
 
@@ -17,7 +17,7 @@ func WithHttpCredentials(r *http.Request) (*http.Request, error) {
 		r.Header.Set(ProxmoxCSRFTokenHeader, subject.CSRFToken)
 
 		cookie := &http.Cookie{
-			Name: ProxmoxTicketCookieName,
+			Name:  ProxmoxTicketCookieName,
 			Value: subject.Ticket,
 		}
 		r.AddCookie(cookie)

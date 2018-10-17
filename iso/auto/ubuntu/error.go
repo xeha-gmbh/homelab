@@ -6,7 +6,7 @@ import (
 
 // Generic
 type GenericError struct {
-	Reason	string
+	Reason string
 }
 
 func (e GenericError) Error() string {
@@ -23,8 +23,8 @@ func NewGenericError(reason string) error {
 
 // Dependency
 type DependencyError struct {
-	MissingPkg		string
-	SuggestedPkg	string
+	MissingPkg   string
+	SuggestedPkg string
 }
 
 func (e DependencyError) Error() string {
@@ -36,5 +36,23 @@ func (e DependencyError) ExitStatus() int {
 }
 
 func NewDependencyError(missing, suggest string) error {
-	return &DependencyError{MissingPkg:missing, SuggestedPkg:suggest}
+	return &DependencyError{MissingPkg: missing, SuggestedPkg: suggest}
+}
+
+// Validation
+type ValidationError struct {
+	Flag   string
+	Reason string
+}
+
+func (e ValidationError) Error() string {
+	return fmt.Sprintf("value of flag %s is invalid: %s", e.Flag, e.Reason)
+}
+
+func (e ValidationError) ExitStatus() int {
+	return 5
+}
+
+func NewValidationError(flag, reason string) error {
+	return &ValidationError{Flag: flag, Reason: reason}
 }

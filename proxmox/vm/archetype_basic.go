@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	basicArchFlagNode 			  = "node"
+	basicArchFlagNode             = "node"
 	basicArchFlagVmId             = "id"
 	basicArchFlagName             = "name"
 	basicArchFlagIsoStorage       = "iso-storage"
@@ -23,15 +23,15 @@ const (
 	basicArchFlagCore             = "core"
 	basicArchFlagMemory           = "memory"
 	basicArchFlagNetworkInterface = "iface"
-	basicArchFlagStart			  = "start"
+	basicArchFlagStart            = "start"
 
-	basicArchDefaultNode = "pve"
-	basicArchDefaultIsoStorage = "local"
-	basicArchDefaultDriveSize = 64
-	basicArchDefaultCore = 2
-	basicArchDefaultMemory = 2048
+	basicArchDefaultNode         = "pve"
+	basicArchDefaultIsoStorage   = "local"
+	basicArchDefaultDriveSize    = 64
+	basicArchDefaultCore         = 2
+	basicArchDefaultMemory       = 2048
 	basicArchDefaultNetworkIFace = "vmbr0"
-	basicArchDefaultStart = false
+	basicArchDefaultStart        = false
 
 	noDefault = ""
 )
@@ -41,17 +41,17 @@ func init() {
 }
 
 type basicArchetype struct {
-	node 			string
-	vmId			string
-	vmName 			string
-	isoStorage		string
-	isoImage 		string
-	driveStorage	string
-	driveSize		int
-	cpuCores		int
-	memory			int
-	networkIFace 	string
-	start 			bool
+	node         string
+	vmId         string
+	vmName       string
+	isoStorage   string
+	isoImage     string
+	driveStorage string
+	driveSize    int
+	cpuCores     int
+	memory       int
+	networkIFace string
+	start        bool
 }
 
 func (b *basicArchetype) Name() string {
@@ -113,15 +113,15 @@ func (b *basicArchetype) BindFlags(flagSet *pflag.FlagSet) {
 	flagSet.StringVar(
 		&b.vmId, basicArchFlagVmId, noDefault,
 		"The ID number of the new VM. Must be unique. Required.",
-		)
+	)
 	flagSet.StringVar(
 		&b.vmName, basicArchFlagName, noDefault,
 		"The name of the new VM. Required.",
-		)
+	)
 	flagSet.StringVar(
 		&b.isoStorage, basicArchFlagIsoStorage, basicArchDefaultIsoStorage,
 		"The storage device name for the ISO installation media.",
-		)
+	)
 	flagSet.StringVar(
 		&b.isoImage, basicArchFlagIsoImage, noDefault,
 		"File name for the ISO installation media. Required.",
@@ -133,7 +133,7 @@ func (b *basicArchetype) BindFlags(flagSet *pflag.FlagSet) {
 	flagSet.IntVar(
 		&b.driveSize, basicArchFlagDriveSize, basicArchDefaultDriveSize,
 		"The size in GB of the hard drive.",
-		)
+	)
 	flagSet.IntVar(
 		&b.cpuCores, basicArchFlagCore, basicArchDefaultCore,
 		"Number of of virtual CPU cores.",
@@ -165,10 +165,10 @@ func (b *basicArchetype) CreateVM() error {
 
 func (b *basicArchetype) doCreateVM() error {
 	var (
-		err 		error
-		subject		*common.ProxmoxSubject
-		req 		*http.Request
-		resp 		*http.Response
+		err     error
+		subject *common.ProxmoxSubject
+		req     *http.Request
+		resp    *http.Response
 	)
 
 	if subject, err = common.ReadSubjectFromCache(); err != nil {
@@ -216,10 +216,10 @@ func (b *basicArchetype) doCreateVM() error {
 
 func (b *basicArchetype) startVM() error {
 	var (
-		err 		error
-		subject		*common.ProxmoxSubject
-		req 		*http.Request
-		resp 		*http.Response
+		err     error
+		subject *common.ProxmoxSubject
+		req     *http.Request
+		resp    *http.Response
 	)
 
 	if subject, err = common.ReadSubjectFromCache(); err != nil {

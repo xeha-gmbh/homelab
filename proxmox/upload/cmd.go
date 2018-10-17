@@ -9,10 +9,10 @@ import (
 )
 
 const (
-	FlagNode = "node"
+	FlagNode    = "node"
 	FlagStorage = "storage"
-	FlagFile = "file"
-	FlagFormat = "format"
+	FlagFile    = "file"
+	FlagFormat  = "format"
 
 	DefaultFormat = "iso"
 )
@@ -49,7 +49,6 @@ func NewProxmoxUploadCommand() *cobra.Command {
 	return cmd
 }
 
-
 // Mark required upload command flags
 func markProxmoxUploadCommandRequiredFlags(cmd *cobra.Command) {
 	for _, f := range []string{
@@ -69,7 +68,7 @@ func addProxmoxLoginCommandFlags(flagSet *flag.FlagSet, payload *ProxmoxUploadRe
 	)
 	flagSet.StringVar(
 		&payload.Storage, FlagStorage, "",
-		"The storage device label to upload file to. " +
+		"The storage device label to upload file to. "+
 			"If not set, command will query the node specified by --node to match the first storage device that accepts the file format --format.",
 	)
 	flagSet.StringVar(

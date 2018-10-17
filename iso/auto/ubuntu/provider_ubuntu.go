@@ -15,12 +15,21 @@ import (
 const (
 	flavorUbuntuBionic64 = "ubuntu/bionic64"
 	flavorUbuntuXenial64 = "ubuntu/xenial64"
+	flavorBionic64       = "bionic64"
+	flavorXenial64       = "xenial64"
 
-	autoScript = "ubuntu-auto.sh"
+	autoScript    = "ubuntu-auto.sh"
 	autoScriptUrl = "https://raw.githubusercontent.com/imulab/homelab/iso/iso/auto/ubuntu/ubuntu-auto.sh"
+
+	flagSeed      = "--seed"
+	flagFlavor    = "--flavor"
+	flagWorkspace = "--workspace"
+	flagBootable  = "--bootable"
+	flagReuse     = "--reuse"
+	flagDebug     = "--debug"
 )
 
-type AutoIsoUbuntuProvider struct {}
+type AutoIsoUbuntuProvider struct{}
 
 func (p *AutoIsoUbuntuProvider) SupportsFlavor(flavor string) bool {
 	switch strings.ToLower(flavor) {
@@ -69,37 +78,52 @@ func downloadAutoScript(workspace string) error {
 }
 
 func (p *AutoIsoUbuntuProvider) RemasterISO(payload *shared.Payload) error {
+	// update flavor to adapt to the script '--flavor|-v' parameter
 	switch payload.Flavor {
 	case flavorUbuntuBionic64:
-		payload.Flavor = "bionic64"
+		payload.Flavor = flavorBionic64
 	case flavorUbuntuXenial64:
-		payload.Flavor = "xenial64"
+		payload.Flavor = flavorXenial64
 	default:
-		payload.Flavor = "unsupported"
+		payload.Flavor = "-"
 	}
 
+	// hash password
 	if err := hashPassword(payload); err != nil {
 		return err
 	}
 
+	// parse template
 	parsedSeed, err := parseTemplateAndWriteToFile(payload)
 	if err != nil {
 		return err
 	}
 
-	remaster := exec.Command(
-		filepath.Join(payload.OutputPath, autoScript),
-		"--seed", parsedSeed,
-		"--flavor", payload.Flavor,
-		"--workspace", payload.OutputPath,
-		"--reuse",
-		"--bootable",
-		"--debug")
-	if out, err := remaster.CombinedOutput(); err != nil {
-		fmt.Fprintln(os.Stdout, string(out))
+	// prepare arguments
+	args := []string{
+		flagSeed, parsedSeed,
+		flagFlavor, payload.Flavor,
+		flagWorkspace, payload.OutputPath,
+	}
+	if payload.UsbBoot {
+		args = append(args, flagBootable)
+	}
+	if payload.Debug {
+		args = append(args, flagDebug)
+	}
+	if payload.Reuse {
+		args = append(args, flagReuse)
+	}
+
+	// execute command
+	remaster := exec.Command(filepath.Join(payload.OutputPath, autoScript), args...)
+	remaster.Stdout = os.Stdout
+	remaster.Stderr = os.Stderr
+	if err := remaster.Start(); err != nil {
 		return NewGenericError(err.Error())
-	} else {
-		fmt.Fprintln(os.Stdout, string(out))
+	}
+	if err := remaster.Wait(); err != nil {
+		return NewGenericError(err.Error())
 	}
 
 	return nil
@@ -120,16 +144,16 @@ func hashPassword(payload *shared.Payload) error {
 
 func parseTemplateAndWriteToFile(payload *shared.Payload) (parsedSeed string, err error) {
 	var (
-		f *os.File
+		f    *os.File
 		tmpl *template.Template
 	)
 
-	parsedSeed = filepath.Join(payload.OutputPath, "imulab.seed")
+	parsedSeed = filepath.Join(payload.OutputPath, seedName)
 
 	if f, err = os.Create(parsedSeed); err != nil {
 		return "", NewGenericError(err.Error())
 	}
-	if tmpl, err = template.New("seed").Parse(seedTmpl); err != nil {
+	if tmpl, err = template.New(seedName).Parse(seedTemplate); err != nil {
 		return "", NewGenericError(err.Error())
 	}
 	if err = tmpl.Execute(f, payload); err != nil {

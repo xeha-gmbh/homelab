@@ -16,6 +16,8 @@ const (
 	FlagInputIso    = "iso"
 	FlagOutputPath  = "target-dir"
 	FlagUsbBoot     = "usb-boot"
+	FlagDebug       = "debug"
+	FlagReuse       = "reuse"
 	FlagTimezone    = "timezone"
 	FlagUsername    = "username"
 	FlagPassword    = "password"
@@ -29,6 +31,8 @@ const (
 	DefaultFlavor      = "ubuntu/bionic64"
 	DefaultOutputPath  = "/tmp"
 	DefaultUsbBoot     = true
+	DefaultDebug       = false
+	DefaultReuse       = false
 	DefaultTimeZone    = "America/Toronto"
 	DefaultUsername    = "imulab"
 	DefaultDomain      = "home.local"
@@ -42,7 +46,7 @@ func NewIsoAutoCommand() *cobra.Command {
 	payload := &shared.Payload{}
 
 	cmd := &cobra.Command{
-		Use: "auto",
+		Use:   "auto",
 		Short: "create unattended installation media",
 		Long: dedent.Dedent(`
 			This command accepts an unmodified OS installation media and attempts to convert it
@@ -95,6 +99,10 @@ func addIsoAutoCommandFlags(flagSet *flag.FlagSet, payload *shared.Payload) {
 		"Path where output files should be placed.")
 	flagSet.BoolVar(&payload.UsbBoot, FlagUsbBoot, DefaultUsbBoot,
 		"Whether the output ISO image should be made boot-able via USB.")
+	flagSet.BoolVar(&payload.Debug, FlagDebug, DefaultDebug,
+		"Whether to print debug message during execution.")
+	flagSet.BoolVar(&payload.Reuse, FlagReuse, DefaultReuse,
+		"Whether to reuse existing original images from the workspace.")
 	flagSet.StringVar(&payload.Timezone, FlagTimezone, DefaultTimeZone,
 		"Timezone of the new user.")
 	flagSet.StringVar(&payload.Username, FlagUsername, DefaultUsername,
@@ -106,8 +114,8 @@ func addIsoAutoCommandFlags(flagSet *flag.FlagSet, payload *shared.Payload) {
 	flagSet.StringVar(&payload.Domain, FlagDomain, DefaultDomain,
 		"Domain of the new system.")
 	flagSet.StringVar(&payload.IpAddress, FlagIpAddress, noDefault,
-		"Ip address of the new system. Leave blank for DHCP auto configuration. " +
-		"If set, should also set --net-mask, --gateway, and --name-servers")
+		"Ip address of the new system. Leave blank for DHCP auto configuration. "+
+			"If set, should also set --net-mask, --gateway, and --name-servers")
 	flagSet.StringVar(&payload.NetMask, FlagNetMask, DefaultNetMask,
 		"Network mask of the specified network.")
 	flagSet.StringVar(&payload.Gateway, FlagGateway, noDefault,

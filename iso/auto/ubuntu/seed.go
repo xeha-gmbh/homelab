@@ -1,6 +1,8 @@
 package ubuntu
 
-const seedTmpl = `
+const seedName = "imulab.seed"
+
+const seedTemplate = `
 # regional setting
 d-i debian-installer/language                               string      en_US:en
 d-i debian-installer/country                                string      US

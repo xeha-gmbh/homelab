@@ -10,7 +10,7 @@ type Provider interface {
 	RemasterISO(payload *Payload) error
 }
 
-type NoProviderError struct {}
+type NoProviderError struct{}
 
 func (p NoProviderError) Error() string {
 	return "no provider to handle flavor"

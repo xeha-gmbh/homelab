@@ -7,7 +7,7 @@ import (
 
 func NewIsoCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "iso",
+		Use:   "iso",
 		Short: "utility to enhance iso images",
 	}
 

@@ -13,10 +13,10 @@ import (
 
 // Arguments for 'proxmox upload' command.
 type ProxmoxUploadRequest struct {
-	Node 		string
-	Storage		string
-	File 		string
-	Format 		string
+	Node    string
+	Storage string
+	File    string
+	Format  string
 }
 
 // Perform upload. If ProxmoxUploadRequest#Storage is not set, this method will try to
@@ -61,11 +61,11 @@ func (ur *ProxmoxUploadRequest) doUpload() error {
 // Query the Proxmox API to match first storage device that accepts content specified by ProxmoxUploadRequest#Format
 func (ur *ProxmoxUploadRequest) matchFirstStorageDevice() (string, error) {
 	var (
-		err 	error
+		err     error
 		subject *common.ProxmoxSubject
-		req 	*http.Request
-		resp 	*http.Response
-		client 	= common.HttpClient()
+		req     *http.Request
+		resp    *http.Response
+		client  = common.HttpClient()
 	)
 
 	if subject, err = common.ReadSubjectFromCache(); err != nil {

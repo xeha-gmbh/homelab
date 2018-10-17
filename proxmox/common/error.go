@@ -6,9 +6,9 @@ import (
 )
 
 const (
-	GenericErrorExitCode        = 1
-	ProxmoxErrorExitCode        = 2
-	ValidationErrorExitCode     = 3
+	GenericErrorExitCode    = 1
+	ProxmoxErrorExitCode    = 2
+	ValidationErrorExitCode = 3
 )
 
 type ExitCodeAwareError interface {
@@ -54,5 +54,3 @@ func ProxmoxError(err error) error {
 		Code: ProxmoxErrorExitCode,
 	}
 }
-
-

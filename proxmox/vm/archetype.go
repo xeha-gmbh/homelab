@@ -32,8 +32,8 @@ type Archetype interface {
 }
 
 var (
-	oneArchetypeRepo 	sync.Once
-	archetypeRepo		*archetypeRepository
+	oneArchetypeRepo sync.Once
+	archetypeRepo    *archetypeRepository
 )
 
 // Public entry point of accessing the archetype repository
@@ -48,7 +48,7 @@ func ArchetypeRepository() *archetypeRepository {
 
 // Repository for storing all available archetypes
 type archetypeRepository struct {
-	at 	map[string]Archetype
+	at map[string]Archetype
 }
 
 // Submits an archetype to the repository. Returns true if the the archetype
@@ -73,7 +73,7 @@ func (r *archetypeRepository) AllArchetypes() []Archetype {
 
 // configuration data for a command line argument
 type Arg struct {
-	Name 		string
-	Default 	interface{}
-	Description	string
+	Name        string
+	Default     interface{}
+	Description string
 }

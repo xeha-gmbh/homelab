@@ -7,7 +7,7 @@ import (
 
 func NewProxmoxVMCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "vm",
+		Use:   "vm",
 		Short: "manage proxmox virtual machine",
 	}
 
@@ -18,15 +18,15 @@ func NewProxmoxVMCommand() *cobra.Command {
 
 func NewProxmoxVMCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "create",
+		Use:   "create",
 		Short: "create proxmox virtual machine",
 	}
 
 	for _, arch := range ArchetypeRepository().AllArchetypes() {
 		subCmd := &cobra.Command{
-			Use: arch.Use(),
+			Use:   arch.Use(),
 			Short: arch.Short(),
-			Long: arch.Long(),
+			Long:  arch.Long(),
 			RunE: func(cmd *cobra.Command, args []string) error {
 				if err := arch.CreateVM(); err != nil {
 					return common.HandleError(err)
@@ -46,4 +46,3 @@ func NewProxmoxVMCreateCommand() *cobra.Command {
 
 	return cmd
 }
-
