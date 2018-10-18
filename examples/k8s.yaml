@@ -1,0 +1,56 @@
+version: "1"
+infra:
+  - name: proxmox
+    api: https://192.168.100.111:8006
+    identity:
+      realm: pam
+      username: root
+      password: <redacted>
+    datastores:
+      - name: local
+        tags:
+          - iso
+      - name: local-data
+        tags:
+          - drive
+images:
+  - name: bionic64-default
+    flavor: ubuntu/bionic64
+    auto: true
+    usb-boot: true
+    reuse: true
+vms:
+  # first VM
+  - id: "110"
+    name: kube-master
+    provider:
+      name: proxmox
+      args:
+        force-login: true
+        node: pve
+    image:
+      name: bionic64-default
+      store: local
+    archetype: basic
+    params:
+      cpu: 2
+      memory: 2048M
+      drive:
+        store: local-data
+        size: 64G
+      network:
+        interface: vmbr0
+        ip: 192.168.100.30
+        mask: 255.255.255.0
+        gateway: 192.168.100.1
+        dns:
+          - 192.168.100.4
+          - 1.1.1.1
+          - 8.8.8.8
+      system:
+        timezone: America/Toronto
+        username: imulab
+        password: <redacted>
+        hostname: kube-master
+        domain: imulab.io
+    start: true
