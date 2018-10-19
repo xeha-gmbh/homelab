@@ -89,7 +89,8 @@ func parseIsoGetCommandFlags(cmd *cobra.Command, flavorAddr, targetDirAddr *stri
 	cmd.Flags().StringVar(flavorAddr, flagFlavor, noDefault,
 		"flavor of the image to download. [" + strings.Join([]string{
 			flavorUbuntuBionic64Live,
-
+			flavorUbuntuBionic64NonLive,
+			flavorUbuntuXenial64,
 		}, "|") + "]")
 	cmd.Flags().StringVar(targetDirAddr, flagTargetDir, defaultTargetDir,
 		"directory to put the downloaded put into.")
