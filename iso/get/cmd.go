@@ -2,7 +2,7 @@ package get
 
 import (
 	"errors"
-	"fmt"
+	. "github.com/imulab/homelab/shared"
 	"github.com/spf13/cobra"
 	"os"
 	"os/exec"
@@ -28,55 +28,102 @@ const (
 	noDefault	= ""
 )
 
+type IsoGetPayload struct {
+	ExtraArgs
+	Flavor 		string
+	TargetDir 	string
+	Reuse 		bool
+}
+
 func NewIsoGetCommand() *cobra.Command {
-	var (
-		flavor 		string
-		targetDir	string
-		reuse 		bool
-	)
+	payload := new(IsoGetPayload)
 
 	cmd := &cobra.Command{
 		Use: "get",
 		Short: "get system iso",
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			cmd.SetOutput(os.Stdout)
+			return cmd.ParseFlags(args)
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var (
 				filename string
 				downloadUrl string
 			)
 
-			switch flavor {
+			switch payload.Flavor {
 			case flavorUbuntuBionic64Live:
 				downloadUrl = flavorUbuntuBionic64LiveUrl
-				filename = filepath.Join(targetDir, flavorUbuntuBionic64LiveUrl[strings.LastIndex(flavorUbuntuBionic64LiveUrl, "/")+1:])
+				filename = filepath.Join(payload.TargetDir, flavorUbuntuBionic64LiveUrl[strings.LastIndex(flavorUbuntuBionic64LiveUrl, "/")+1:])
 			case flavorUbuntuBionic64NonLive:
 				downloadUrl = flavorUbuntuBionic64NonLiveUrl
-				filename = filepath.Join(targetDir, flavorUbuntuBionic64NonLiveUrl[strings.LastIndex(flavorUbuntuBionic64NonLiveUrl, "/")+1:])
+				filename = filepath.Join(payload.TargetDir, flavorUbuntuBionic64NonLiveUrl[strings.LastIndex(flavorUbuntuBionic64NonLiveUrl, "/")+1:])
 			case flavorUbuntuXenial64:
 				downloadUrl = flavorUbuntuXenial64Url
-				filename = filepath.Join(targetDir, flavorUbuntuXenial64Url[strings.LastIndex(flavorUbuntuXenial64Url, "/")+1:])
+				filename = filepath.Join(payload.TargetDir, flavorUbuntuXenial64Url[strings.LastIndex(flavorUbuntuXenial64Url, "/")+1:])
 			default:
-				return errors.New("flavor not supported")
+				WithConfig(cmd, &payload.ExtraArgs).Error(
+					1,
+					"Flavor {{index .flavor}} is not supported.",
+					map[string]interface{}{
+						"event": "unsupported_flavor",
+						"flavor": payload.Flavor,
+						"exit-code": 1,
+					})
+				return errors.New("unsupported_flavor")
 			}
 
-			if _, err := os.Stat(filename); !os.IsNotExist(err) && reuse {
-				fmt.Fprintf(os.Stdout, "Reusing file at %s, no download is executed.\n", filename)
+			if _, err := os.Stat(filename); !os.IsNotExist(err) && payload.Reuse {
+				WithConfig(cmd, &payload.ExtraArgs).Info(
+					"Reused file at {{index .file}}, no download was executed.",
+					map[string]interface{}{
+						"event": "reused_file",
+						"file": filename,
+						"reuse": payload.Reuse,
+					})
 				return nil
 			}
 
-			wget := exec.Command("wget", "-O", filename, downloadUrl)
-			wget.Stdout = os.Stdout
-			wget.Stderr = os.Stderr
-			if err := wget.Run(); err != nil {
-				return fmt.Errorf("download file %s to %s failed: %s", downloadUrl, filename, err.Error())
+			wgetArgs := []string{"-O", filename, downloadUrl}
+			if !payload.Debug {
+				wgetArgs = append([]string{"-q"}, wgetArgs...)
 			}
-			fmt.Fprintf(os.Stdout, "File downloaded to %s.\n", filename)
+			wget := exec.Command("wget", wgetArgs...)
+			wget.Stdout = cmd.OutOrStdout()
+			wget.Stderr = cmd.OutOrStderr()
+			WithConfig(cmd, &payload.ExtraArgs).Debug(
+				"Downloading from {{index .url}}, please wait.",
+				map[string]interface{}{
+					"event": "download_in_progress",
+					"url": downloadUrl,
+				})
+			if err := wget.Run(); err != nil {
+				WithConfig(cmd, &payload.ExtraArgs).Error(
+					2,
+					"Download from {{index .url}} failed. Cause: {{index .cause}}",
+					map[string]interface{}{
+						"event": "download_error",
+						"url": downloadUrl,
+						"cause": err.Error(),
+						"exit-code": 2,
+					})
+				return errors.New("download_error")
+			}
 
+			WithConfig(cmd, &payload.ExtraArgs).Info(
+				"Image {{index .flavor}} downloaded to {{index .file}}.",
+				map[string]interface{}{
+					"event": "download_success",
+					"flavor": payload.Flavor,
+					"file": filename,
+				})
 			return nil
 		},
 	}
 
-	parseIsoGetCommandFlags(cmd, &flavor, &targetDir, &reuse)
+	parseIsoGetCommandFlags(cmd, payload)
 	markIsoGetCommandRequiredFlags(cmd)
+	(&payload.ExtraArgs).InjectExtraArgs(cmd)
 
 	return cmd
 }
@@ -85,15 +132,15 @@ func markIsoGetCommandRequiredFlags(cmd *cobra.Command) {
 	cmd.MarkFlagRequired(flagFlavor)
 }
 
-func parseIsoGetCommandFlags(cmd *cobra.Command, flavorAddr, targetDirAddr *string, reuseAddr *bool) {
-	cmd.Flags().StringVar(flavorAddr, flagFlavor, noDefault,
+func parseIsoGetCommandFlags(cmd *cobra.Command, payload *IsoGetPayload) {
+	cmd.Flags().StringVar(&payload.Flavor, flagFlavor, noDefault,
 		"flavor of the image to download. [" + strings.Join([]string{
 			flavorUbuntuBionic64Live,
 			flavorUbuntuBionic64NonLive,
 			flavorUbuntuXenial64,
 		}, "|") + "]")
-	cmd.Flags().StringVar(targetDirAddr, flagTargetDir, defaultTargetDir,
+	cmd.Flags().StringVar(&payload.TargetDir, flagTargetDir, defaultTargetDir,
 		"directory to put the downloaded put into.")
-	cmd.Flags().BoolVar(reuseAddr, flagReuse, defaultReuse,
+	cmd.Flags().BoolVar(&payload.Reuse, flagReuse, defaultReuse,
 		"whether to use an existing image in the target directory if one is found.")
 }

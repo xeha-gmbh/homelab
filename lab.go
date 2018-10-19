@@ -9,26 +9,34 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"os"
+	"sync"
 )
 
-func NewLabCommand() *cobra.Command {
-	cmds := &cobra.Command{
-		Use:   "lab",
-		Short: "lab: easily configure the lab environment",
-		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmd.ParseFlags(args); err != nil {
-				return err
-			}
-			return nil
-		},
-	}
+var (
+	once 	sync.Once
+	labCmd 	*cobra.Command
+)
 
-	cmds.ResetFlags()
-	cmds.AddCommand(proxmox.NewProxmoxCommand())
-	cmds.AddCommand(iso.NewIsoCommand())
-	cmds.AddCommand(bootstrap.NewBootstrapCommand())
+func GetLabCommand() *cobra.Command {
+	once.Do(func() {
+		labCmd = &cobra.Command{
+			Use:   "lab",
+			Short: "lab: easily configure the lab environment",
+			PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+				if err := cmd.ParseFlags(args); err != nil {
+					return err
+				}
+				return nil
+			},
+		}
 
-	return cmds
+		labCmd.ResetFlags()
+		labCmd.AddCommand(proxmox.NewProxmoxCommand())
+		labCmd.AddCommand(iso.NewIsoCommand())
+		labCmd.AddCommand(bootstrap.NewBootstrapCommand())
+	})
+
+	return labCmd
 }
 
 func Run() error {
@@ -36,7 +44,7 @@ func Run() error {
 
 	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
 
-	cmd := NewLabCommand()
+	cmd := GetLabCommand()
 	return cmd.Execute()
 }
 

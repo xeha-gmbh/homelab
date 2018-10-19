@@ -1,8 +1,8 @@
 package bootstrap
 
 import (
-	"gopkg.in/yaml.v2"
-	"os"
+	"fmt"
+	"strings"
 )
 
 func parseV1Config(data map[string]interface{}) (Config, error) {
@@ -31,7 +31,29 @@ type v1Config struct {
 }
 
 func (c *v1Config) Bootstrap() error {
-	yaml.NewEncoder(os.Stdout).Encode(c)
+	//yaml.NewEncoder(os.Stdout).Encode(c)
 	//yaml.NewEncoder(os.Stdout).Encode(c.VMs[0].Params)
+
+	for _, vm := range c.VMs {
+		provider, err := c.GetProvider(vm.Provider.Name)
+		if err != nil {
+			return fmt.Errorf("Error creating vm [%s]: %s\n", vm.Name, err.Error())
+		}
+
+		err = provider.CreateVM(vm, c.Images)
+		if err != nil {
+			return fmt.Errorf("Error creating vm [%s]: %s\n", vm.Name, err.Error())
+		}
+	}
+
 	return nil
+}
+
+func (c *v1Config) GetProvider(name string) (Provider, error) {
+	for _, provider := range c.Providers {
+		if strings.ToLower(name) == strings.ToLower(provider.Name()) {
+			return provider, nil
+		}
+	}
+	return nil, fmt.Errorf("no provider by name %s", name)
 }

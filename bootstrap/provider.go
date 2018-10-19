@@ -3,8 +3,10 @@ package bootstrap
 import (
 	"errors"
 	"fmt"
+	"github.com/imulab/homelab/iso/get"
 	"github.com/mitchellh/mapstructure"
 	"reflect"
+	"strings"
 )
 
 // Entry point to parse a list of providers.
@@ -51,6 +53,7 @@ func ParseProviders(data map[string]interface{}) ([]Provider, error) {
 // Interface for all providers
 type Provider interface {
 	Name() string
+	CreateVM(vm *VM, images []*Image) error
 }
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -71,10 +74,45 @@ type proxmoxProvider struct {
 func (p *proxmoxProvider) Name() string {
 	return proxmox
 }
+
+func (p *proxmoxProvider) CreateVM(vm *VM, images []*Image) error {
+	if err := p.ensureImage(vm, images); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p *proxmoxProvider) ensureImage(vm *VM, images []*Image) error {
+	image, err := p.getImage(vm.Image.Name, images)
+	if err != nil {
+		return err
+	}
+
+	isoGet := get.NewIsoGetCommand()
+	isoGet.SetArgs([]string{
+		"--flavor",	image.Flavor,
+		"--target-dir", tempDir,
+		"--reuse",
+	})
+	return isoGet.Execute()
+}
+
+func (p *proxmoxProvider) getImage(name string, images []*Image) (*Image, error) {
+	for _, image := range images {
+		if strings.ToLower(name) == strings.ToLower(image.Name) {
+			return image, nil
+		}
+	}
+	return nil, fmt.Errorf("no image by name %s", name)
+}
+
 // ---------------------------------------------------------------------------------------------------------------------
 
 const (
 	keyInfra = "infra"
 	keyName = "name"
 	proxmox  = "proxmox"
+
+	tempDir	= "/tmp"
 )
