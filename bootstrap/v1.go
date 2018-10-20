@@ -39,7 +39,7 @@ func (c *v1Config) Bootstrap() error {
 	for _, vm := range c.VMs {
 		provider, err := c.GetProvider(vm.Provider.Name)
 		if err != nil {
-			output.Error(ErrOp.ExitCode,
+			output.Fatal(ErrOp.ExitCode,
 				"Failed to creating vm [name={{index .name}}]. Cause: {{index .cause}}.",
 				map[string]interface{}{
 					"event": "",
@@ -51,7 +51,7 @@ func (c *v1Config) Bootstrap() error {
 
 		err = provider.CreateVM(vm, c.Images)
 		if err != nil {
-			output.Error(ErrOp.ExitCode,
+			output.Fatal(ErrOp.ExitCode,
 				"Failed to creating vm [name={{index .name}}]. Cause: {{index .cause}}.",
 				map[string]interface{}{
 					"event": "",

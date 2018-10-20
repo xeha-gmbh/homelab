@@ -9,7 +9,7 @@ import (
 func ParseImages(data map[string]interface{}) ([]*Image, error) {
 	rawImages, isList := data[keyImages].([]interface{})
 	if !isList {
-		output.Error(shared.ErrParse.ExitCode,
+		output.Fatal(shared.ErrParse.ExitCode,
 			"Malformed config: {{index .error}}",
 			map[string]interface{}{
 				"event": "parse_error",
@@ -23,7 +23,7 @@ func ParseImages(data map[string]interface{}) ([]*Image, error) {
 	for _, oneRawImage := range rawImages {
 		image := &Image{}
 		if err := mapstructure.Decode(oneRawImage, image); err != nil {
-			output.Error(shared.ErrParse.ExitCode,
+			output.Fatal(shared.ErrParse.ExitCode,
 				"Malformed config: failed to parse image. Cause: {{index .cause}}",
 				map[string]interface{}{
 					"event": "parse_error",

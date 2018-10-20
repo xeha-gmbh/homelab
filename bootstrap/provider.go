@@ -15,7 +15,7 @@ import (
 func ParseProviders(data map[string]interface{}) ([]Provider, error) {
 	rawProviders, isList := data[keyInfra].([]interface{})
 	if !isList {
-		output.Error(shared.ErrParse.ExitCode,
+		output.Fatal(shared.ErrParse.ExitCode,
 			"Malformed config: {{index .error}}",
 			map[string]interface{}{
 				"event": "parse_error",
@@ -28,7 +28,7 @@ func ParseProviders(data map[string]interface{}) ([]Provider, error) {
 	for _, oneRawProvider := range rawProviders {
 		rawData, isMap := oneRawProvider.(map[interface{}]interface{})
 		if !isMap {
-			output.Error(shared.ErrParse.ExitCode,
+			output.Fatal(shared.ErrParse.ExitCode,
 				"Malformed config: {{index .error}}",
 				map[string]interface{}{
 					"event": "parse_error",
@@ -39,7 +39,7 @@ func ParseProviders(data map[string]interface{}) ([]Provider, error) {
 		}
 		providerName, hasName := rawData[keyName].(string)
 		if !hasName {
-			output.Error(shared.ErrParse.ExitCode,
+			output.Fatal(shared.ErrParse.ExitCode,
 				"Malformed config: {{index .error}}",
 				map[string]interface{}{
 					"event": "parse_error",
@@ -53,7 +53,7 @@ func ParseProviders(data map[string]interface{}) ([]Provider, error) {
 		case proxmox:
 			oneProvider = &proxmoxProvider{}
 			if err := mapstructure.Decode(rawData, oneProvider); err != nil {
-				output.Error(shared.ErrParse.ExitCode,
+				output.Fatal(shared.ErrParse.ExitCode,
 					"Malformed config, unable to decode provider. Cause: {{index .cause}}",
 					map[string]interface{}{
 						"event": "parse_error",
@@ -62,7 +62,7 @@ func ParseProviders(data map[string]interface{}) ([]Provider, error) {
 				return nil, shared.ErrParse
 			}
 		default:
-			output.Error(shared.ErrApi.ExitCode,
+			output.Fatal(shared.ErrApi.ExitCode,
 				"Unsupported provider {{index .provider}}.",
 				map[string]interface{}{
 					"event": "api_error",
@@ -74,7 +74,7 @@ func ParseProviders(data map[string]interface{}) ([]Provider, error) {
 	}
 
 	if len(providers) == 0 {
-		output.Error(shared.ErrApi.ExitCode,
+		output.Fatal(shared.ErrApi.ExitCode,
 			"No provider.",
 			map[string]interface{}{
 				"event": "api_error",

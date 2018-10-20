@@ -14,7 +14,7 @@ import (
 func ParseVMs(data map[string]interface{}) ([]*VM, error) {
 	rawVMs, isList := data[keyVMs].([]interface{})
 	if !isList {
-		output.Error(1,
+		output.Fatal(1,
 			"Malformed config: {{index .error}}",
 			map[string]interface{}{
 				"event": "parse_error",
@@ -28,7 +28,7 @@ func ParseVMs(data map[string]interface{}) ([]*VM, error) {
 	for _, oneRawVM := range rawVMs {
 		rawData, isMap := oneRawVM.(map[interface{}]interface{})
 		if !isMap {
-			output.Error(1,
+			output.Fatal(1,
 				"Malformed config: {{index .error}}",
 				map[string]interface{}{
 					"event": "parse_error",
@@ -41,7 +41,7 @@ func ParseVMs(data map[string]interface{}) ([]*VM, error) {
 
 		vm := &VM{}
 		if err := mapstructure.Decode(rawData, vm); err != nil {
-			output.Error(1,
+			output.Fatal(1,
 				"Malformed config: unable to decode vm. Cause: {{index .cause}}",
 				map[string]interface{}{
 					"event": "parse_error",
@@ -56,7 +56,7 @@ func ParseVMs(data map[string]interface{}) ([]*VM, error) {
 			if vm.Archetype == basicArchetype {
 				params, err := ParseProxmoxBasicArchetypeParams(rawData["params"])
 				if err != nil {
-					output.Error(1,
+					output.Fatal(1,
 						"Malformed config: unable to parse proxmox basic params. Cause: {{index .cause}}",
 						map[string]interface{}{
 							"event": "parse_error",
@@ -67,7 +67,7 @@ func ParseVMs(data map[string]interface{}) ([]*VM, error) {
 				}
 				vm.Params = params
 			} else {
-				output.Error(1,
+				output.Fatal(1,
 					"Unsupported proxmox archetype {{index .archetype}}.",
 					map[string]interface{}{
 						"event": "api_error",
@@ -77,7 +77,7 @@ func ParseVMs(data map[string]interface{}) ([]*VM, error) {
 				return nil, errors.New("api_error")
 			}
 		default:
-			output.Error(1,
+			output.Fatal(1,
 				"Unsupported provider {{index .provider}}.",
 				map[string]interface{}{
 					"event": "api_error",

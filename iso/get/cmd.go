@@ -62,7 +62,7 @@ func NewIsoGetCommand() *cobra.Command {
 				downloadUrl = flavorUbuntuXenial64Url
 				filename = filepath.Join(payload.TargetDir, flavorUbuntuXenial64Url[strings.LastIndex(flavorUbuntuXenial64Url, "/")+1:])
 			default:
-				WithConfig(cmd, &payload.ExtraArgs).Error(
+				WithConfig(cmd, &payload.ExtraArgs).Fatal(
 					1,
 					"Flavor {{index .flavor}} is not supported.",
 					map[string]interface{}{
@@ -98,7 +98,7 @@ func NewIsoGetCommand() *cobra.Command {
 					"url": downloadUrl,
 				})
 			if err := wget.Run(); err != nil {
-				WithConfig(cmd, &payload.ExtraArgs).Error(
+				WithConfig(cmd, &payload.ExtraArgs).Fatal(
 					2,
 					"Download from {{index .url}} failed. Cause: {{index .cause}}",
 					map[string]interface{}{

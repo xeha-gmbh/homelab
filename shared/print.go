@@ -16,7 +16,7 @@ func WithConfig(cmd *cobra.Command, opt *ExtraArgs) MessagePrinter {
 type MessagePrinter interface {
 	Info(templateText string, args map[string]interface{})
 	Debug(templateText string, args map[string]interface{})
-	Error(exitCode int, templateText string, args map[string]interface{})
+	Fatal(exitCode int, templateText string, args map[string]interface{})
 }
 
 type printMessage struct {
@@ -34,7 +34,7 @@ func (p *printMessage) Debug(templateText string, args map[string]interface{}) {
 	}
 }
 
-func (p *printMessage) Error(exitCode int, templateText string, args map[string]interface{}) {
+func (p *printMessage) Fatal(exitCode int, templateText string, args map[string]interface{}) {
 	args["exitCode"] = exitCode
 	p.print(p.cmd.OutOrStderr(), "ERROR", templateText, args)
 	os.Exit(exitCode)
