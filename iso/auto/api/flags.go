@@ -3,8 +3,8 @@ package api
 const (
 	FlagFlavor      = "flavor"
 	FlagInputIso    = "input-iso"
-	FlagOutputIso	= "output-iso"
-	FlagWorkspace  	= "workspace"
+	FlagOutputIso   = "output-iso"
+	FlagWorkspace   = "workspace"
 	FlagUsbBoot     = "usb-boot"
 	FlagReuse       = "reuse"
 	FlagTimezone    = "timezone"

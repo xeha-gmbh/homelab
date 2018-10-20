@@ -21,9 +21,9 @@ var (
 type Payload struct {
 	ExtraArgs
 	Flavor      string `json:"flavor"`
-	InputIso 	string `json:"input_iso"`
-	OutputIso 	string `json:"output_iso"`
-	Workspace  	string `json:"workspace"`
+	InputIso    string `json:"input_iso"`
+	OutputIso   string `json:"output_iso"`
+	Workspace   string `json:"workspace"`
 	UsbBoot     bool   `json:"usb_boot"`
 	Reuse       bool   `json:"reuse"`
 	Timezone    string `json:"timezone"`

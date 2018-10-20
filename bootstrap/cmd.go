@@ -11,8 +11,8 @@ const (
 )
 
 var (
-	output 		MessagePrinter
-	extraArgs	*ExtraArgs
+	output    MessagePrinter
+	extraArgs *ExtraArgs
 )
 
 func NewBootstrapCommand() *cobra.Command {

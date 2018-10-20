@@ -31,10 +31,10 @@ func (p *proxmoxProvider) Name() string {
 
 func (p *proxmoxProvider) CreateVM(vm *VM, images []*Image) error {
 	var (
-		err 			error
-		dlImagePath		string
-		autoImagePath 	string
-		image 			*Image
+		err           error
+		dlImagePath   string
+		autoImagePath string
+		image         *Image
 	)
 
 	if image, err = p.getImage(vm.Image.Name, images); err != nil {
@@ -45,12 +45,8 @@ func (p *proxmoxProvider) CreateVM(vm *VM, images []*Image) error {
 		return err
 	}
 
-	if image.Auto {
-		if autoImagePath, err = p.createAutoInstallImage(vm, image, dlImagePath); err != nil {
-			return err
-		}
-	} else {
-		autoImagePath = dlImagePath
+	if autoImagePath, err = p.createAutoInstallImage(vm, image, dlImagePath); err != nil {
+		return err
 	}
 
 	fmt.Println(autoImagePath)
@@ -60,20 +56,25 @@ func (p *proxmoxProvider) CreateVM(vm *VM, images []*Image) error {
 
 func (p *proxmoxProvider) createAutoInstallImage(vm *VM, image *Image, downloadedImagePath string) (string, error) {
 	var (
-		err 			error
-		origImagePath	= filepath.Join(tempDir, "ubuntu.iso")
+		err        error
+		outputPath = filepath.Join(
+			tempDir,
+			fmt.Sprintf("%s-%s.iso",
+				strings.Replace(image.Flavor, string(filepath.Separator), "-", -1),
+				vm.Id))
 	)
 
-	// TODO copy here since the input iso name was fixed. We can remove this after turning it into a parameter
-	if err = p.copy(downloadedImagePath, origImagePath); err != nil {
-		return "", err
+	if !image.Auto {
+		return downloadedImagePath, nil
 	}
 
 	isoAutoArgs := []string{
 		"iso",
 		"auto",
 		"--flavor", image.Flavor,
-		"--target-dir", tempDir,
+		"--input-iso", downloadedImagePath,
+		"--output-iso", outputPath,
+		"--workspace", tempDir,
 		"--output-format", shared.OutputFormatJson,
 	}
 	if image.UsbBoot {
@@ -129,7 +130,7 @@ func (p *proxmoxProvider) createAutoInstallImage(vm *VM, image *Image, downloade
 func (p *proxmoxProvider) copy(source, dest string) error {
 	var (
 		in, out *os.File
-		err 	error
+		err     error
 	)
 
 	if in, err = os.Open(source); err != nil {
@@ -188,7 +189,7 @@ const (
 	keyInfra = "infra"
 	keyName  = "name"
 	proxmox  = "proxmox"
-	tempDir = "/tmp"
+	tempDir  = "/tmp"
 )
 
 var (
