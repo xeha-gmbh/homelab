@@ -1,58 +1,26 @@
 package shared
 
-import (
-	"bytes"
-	"encoding/json"
-	"github.com/spf13/cobra"
-	"io"
-	"os"
-	"text/template"
+var (
+	ErrParse = errorFactory(1)("parse-error")
+	ErrApi = errorFactory(2)("api-error")
+	ErrOp = errorFactory(3)("op-error")
+	ErrDependency = errorFactory(4)("dependency-error")
 )
 
-func WithConfig(cmd *cobra.Command, opt *ExtraArgs) *printMessage {
-	return &printMessage{cmd: cmd,opt:opt}
-}
-
-type printMessage struct {
-	cmd 	*cobra.Command
-	opt 	*ExtraArgs
-}
-
-func (p *printMessage) Info(templateText string, args map[string]interface{}) {
-	p.print(p.cmd.OutOrStdout(), "INFO", templateText, args)
-}
-
-func (p *printMessage) Debug(templateText string, args map[string]interface{}) {
-	if p.opt.Debug {
-		p.print(p.cmd.OutOrStdout(), "DEBUG", templateText, args)
+func errorFactory(code int) func(cause string) *LabError {
+	return func(cause string) *LabError {
+		return &LabError{
+			Cause: cause,
+			ExitCode: code,
+		}
 	}
 }
 
-func (p *printMessage) Error(exitCode int, templateText string, args map[string]interface{}) {
-	p.print(p.cmd.OutOrStderr(), "ERROR", templateText, args)
-	os.Exit(exitCode)
+type LabError struct {
+	Cause 		string
+	ExitCode 	int
 }
 
-func (p *printMessage) print(w io.Writer, level, templateText string, args map[string]interface{}) {
-	switch p.opt.OutputFormat {
-	case OutputFormatJson:
-		args["level"] = level
-		args["message"] = p.getMessage(templateText, args)
-		json.NewEncoder(w).Encode(args)
-	default:
-		w.Write([]byte("[" + level + "] " + p.getMessage(templateText, args) + "\n"))
-	}
-}
-
-func (p *printMessage) getMessage(templateText string, args map[string]interface{}) string {
-	buf := new(bytes.Buffer)
-	t, err := template.New("template").Parse(templateText)
-	if err != nil {
-		panic(err)
-	}
-	err = t.Execute(buf, args)
-	if err != nil {
-		panic(err)
-	}
-	return buf.String()
+func (e *LabError) Error() string {
+	return e.Cause
 }

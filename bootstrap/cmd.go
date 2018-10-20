@@ -1,8 +1,8 @@
 package bootstrap
 
 import (
+	. "github.com/imulab/homelab/shared"
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 )
 
 const (
@@ -10,14 +10,25 @@ const (
 	noDefault = ""
 )
 
+var (
+	output 	MessagePrinter
+)
+
 func NewBootstrapCommand() *cobra.Command {
-	var yamlPath string
+	payload := new(Payload)
 
 	cmd := &cobra.Command{
 		Use:"bootstrap",
 		Short:"bootstrap home lab with a single config",
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if err := cmd.ParseFlags(args); err != nil {
+				return err
+			}
+			output = WithConfig(cmd, &payload.ExtraArgs)
+			return nil
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			config, err := ParseConfig(yamlPath)
+			config, err := ParseConfig(payload.YamlPath)
 			if err != nil {
 				return err
 			}
@@ -25,9 +36,15 @@ func NewBootstrapCommand() *cobra.Command {
 		},
 	}
 
-	pflag.StringVar(&yamlPath, flagConfig, noDefault, "Path to the YAML configuration file.")
+	cmd.Flags().StringVar(&payload.YamlPath, flagConfig, noDefault, "Path to the YAML configuration file.")
 	cmd.MarkFlagFilename(flagConfig, "yaml", "yml")
 	cmd.MarkFlagRequired(flagConfig)
+	payload.ExtraArgs.InjectExtraArgs(cmd)
 
 	return cmd
+}
+
+type Payload struct {
+	ExtraArgs
+	YamlPath 	string
 }

@@ -2,6 +2,7 @@ package bootstrap
 
 import (
 	"fmt"
+	. "github.com/imulab/homelab/shared"
 	"strings"
 )
 
@@ -25,9 +26,10 @@ func parseV1Config(data map[string]interface{}) (Config, error) {
 }
 
 type v1Config struct {
-	Providers 	[]Provider	`yaml:"providers"`
-	Images 		[]*Image 	`yaml:"images"`
-	VMs 		[]*VM		`yaml:"vms"`
+	Providers 	[]Provider		`yaml:"providers"`
+	Images 		[]*Image 		`yaml:"images"`
+	VMs 		[]*VM			`yaml:"vms"`
+	out 		MessagePrinter	`yaml:"-"`
 }
 
 func (c *v1Config) Bootstrap() error {
@@ -37,12 +39,26 @@ func (c *v1Config) Bootstrap() error {
 	for _, vm := range c.VMs {
 		provider, err := c.GetProvider(vm.Provider.Name)
 		if err != nil {
-			return fmt.Errorf("Error creating vm [%s]: %s\n", vm.Name, err.Error())
+			output.Error(ErrOp.ExitCode,
+				"Failed to creating vm [name={{index .name}}]. Cause: {{index .cause}}.",
+				map[string]interface{}{
+					"event": "",
+					"name": vm.Name,
+					"cause": err.Error(),
+				})
+			return ErrOp
 		}
 
 		err = provider.CreateVM(vm, c.Images)
 		if err != nil {
-			return fmt.Errorf("Error creating vm [%s]: %s\n", vm.Name, err.Error())
+			output.Error(ErrOp.ExitCode,
+				"Failed to creating vm [name={{index .name}}]. Cause: {{index .cause}}.",
+				map[string]interface{}{
+					"event": "",
+					"name": vm.Name,
+					"cause": err.Error(),
+				})
+			return ErrOp
 		}
 	}
 

@@ -14,20 +14,41 @@ import (
 func ParseVMs(data map[string]interface{}) ([]*VM, error) {
 	rawVMs, isList := data[keyVMs].([]interface{})
 	if !isList {
-		return nil, fmt.Errorf("expect key '%s' to be a list", keyVMs)
+		output.Error(1,
+			"Malformed config: {{index .error}}",
+			map[string]interface{}{
+				"event": "parse_error",
+				"exitCode": 1,
+				"error": fmt.Sprintf("expect key '%s' to be a list", keyVMs),
+			})
+		return nil, errors.New("parse_error")
 	}
 
 	vms := make([]*VM, 0, len(rawVMs))
 	for _, oneRawVM := range rawVMs {
 		rawData, isMap := oneRawVM.(map[interface{}]interface{})
 		if !isMap {
-			return nil, fmt.Errorf("expect each '%s' to be a map, but got %s",
-				keyVMs, reflect.TypeOf(oneRawVM).String())
+			output.Error(1,
+				"Malformed config: {{index .error}}",
+				map[string]interface{}{
+					"event": "parse_error",
+					"exitCode": 1,
+					"error": fmt.Sprintf("expect each '%s' to be a map, but got %s",
+						keyVMs, reflect.TypeOf(oneRawVM).String()),
+				})
+			return nil, errors.New("parse_error")
 		}
 
 		vm := &VM{}
 		if err := mapstructure.Decode(rawData, vm); err != nil {
-			return nil, fmt.Errorf("decode vm failed: %s", err.Error())
+			output.Error(1,
+				"Malformed config: unable to decode vm. Cause: {{index .cause}}",
+				map[string]interface{}{
+					"event": "parse_error",
+					"exitCode": 1,
+					"cause": err.Error(),
+				})
+			return nil, errors.New("parse_error")
 		}
 
 		switch vm.Provider.Name {
@@ -35,14 +56,35 @@ func ParseVMs(data map[string]interface{}) ([]*VM, error) {
 			if vm.Archetype == basicArchetype {
 				params, err := ParseProxmoxBasicArchetypeParams(rawData["params"])
 				if err != nil {
-					return nil, fmt.Errorf("failed to parse proxmox basic params: %s", err.Error())
+					output.Error(1,
+						"Malformed config: unable to parse proxmox basic params. Cause: {{index .cause}}",
+						map[string]interface{}{
+							"event": "parse_error",
+							"exitCode": 1,
+							"cause": err.Error(),
+						})
+					return nil, errors.New("parse_error")
 				}
 				vm.Params = params
 			} else {
-				return nil, fmt.Errorf("unsupported proxmox archetype %s", vm.Archetype)
+				output.Error(1,
+					"Unsupported proxmox archetype {{index .archetype}}.",
+					map[string]interface{}{
+						"event": "api_error",
+						"exitCode": 1,
+						"archetype": vm.Archetype,
+					})
+				return nil, errors.New("api_error")
 			}
 		default:
-			return nil, errors.New("unable to parse vm params")
+			output.Error(1,
+				"Unsupported provider {{index .provider}}.",
+				map[string]interface{}{
+					"event": "api_error",
+					"exitCode": 1,
+					"provider": vm.Provider.Name,
+				})
+			return nil, errors.New("api_error")
 		}
 
 		vms = append(vms, vm)
@@ -160,7 +202,5 @@ func (p *proxmoxBasicArchetypeParams) amountAndUnit(value string) (int, string, 
 
 const (
 	keyVMs	= "vms"
-	keyProvider = "provider"
-
 	basicArchetype = "basic"
 )

@@ -2,20 +2,34 @@ package bootstrap
 
 import (
 	"fmt"
+	"github.com/imulab/homelab/shared"
 	"github.com/mitchellh/mapstructure"
 )
 
 func ParseImages(data map[string]interface{}) ([]*Image, error) {
 	rawImages, isList := data[keyImages].([]interface{})
 	if !isList {
-		return nil, fmt.Errorf("expect key '%s' to be a list", keyImages)
+		output.Error(shared.ErrParse.ExitCode,
+			"Malformed config: {{index .error}}",
+			map[string]interface{}{
+				"event": "parse_error",
+				"error": fmt.Sprintf("expect key %s to be a list.", keyImages),
+				"key": keyImages,
+			})
+		return nil, shared.ErrParse
 	}
 
 	images := make([]*Image, 0, len(rawImages))
 	for _, oneRawImage := range rawImages {
 		image := &Image{}
 		if err := mapstructure.Decode(oneRawImage, image); err != nil {
-			return nil, fmt.Errorf("failed to parse image: %s", err.Error())
+			output.Error(shared.ErrParse.ExitCode,
+				"Malformed config: failed to parse image. Cause: {{index .cause}}",
+				map[string]interface{}{
+					"event": "parse_error",
+					"cause": err.Error(),
+				})
+			return nil, shared.ErrParse
 		} else {
 			images = append(images, image)
 		}

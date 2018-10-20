@@ -3,8 +3,9 @@ package bootstrap
 import (
 	"errors"
 	"fmt"
-	"github.com/imulab/homelab/iso/get"
+	"github.com/imulab/homelab/shared"
 	"github.com/mitchellh/mapstructure"
+	"os/exec"
 	"reflect"
 	"strings"
 )
@@ -14,19 +15,37 @@ import (
 func ParseProviders(data map[string]interface{}) ([]Provider, error) {
 	rawProviders, isList := data[keyInfra].([]interface{})
 	if !isList {
-		return nil, fmt.Errorf("expect key '%s' to be a list", keyInfra)
+		output.Error(shared.ErrParse.ExitCode,
+			"Malformed config: {{index .error}}",
+			map[string]interface{}{
+				"event": "parse_error",
+				"error": fmt.Sprintf("expect key '%s' to be a list.", keyInfra),
+			})
+		return nil, shared.ErrParse
 	}
 
 	providers := make([]Provider, 0, len(rawProviders))
 	for _, oneRawProvider := range rawProviders {
 		rawData, isMap := oneRawProvider.(map[interface{}]interface{})
 		if !isMap {
-			return nil, fmt.Errorf("expect each '%s' to be a map, but got %s",
-				keyInfra, reflect.TypeOf(oneRawProvider).String())
+			output.Error(shared.ErrParse.ExitCode,
+				"Malformed config: {{index .error}}",
+				map[string]interface{}{
+					"event": "parse_error",
+					"error": fmt.Sprintf("expect each '%s' to be a map, but got %s",
+						keyInfra, reflect.TypeOf(oneRawProvider).String()),
+				})
+			return nil, shared.ErrParse
 		}
 		providerName, hasName := rawData[keyName].(string)
 		if !hasName {
-			return nil, fmt.Errorf("expect each '%s' to have a key '%s'", keyInfra, keyName)
+			output.Error(shared.ErrParse.ExitCode,
+				"Malformed config: {{index .error}}",
+				map[string]interface{}{
+					"event": "parse_error",
+					"error": fmt.Sprintf("expect each '%s' to have a key '%s'", keyInfra, keyName),
+				})
+			return nil, shared.ErrParse
 		}
 
 		var oneProvider Provider
@@ -34,16 +53,33 @@ func ParseProviders(data map[string]interface{}) ([]Provider, error) {
 		case proxmox:
 			oneProvider = &proxmoxProvider{}
 			if err := mapstructure.Decode(rawData, oneProvider); err != nil {
-				return nil, fmt.Errorf("decode proxmox provider failed: %s", err.Error())
+				output.Error(shared.ErrParse.ExitCode,
+					"Malformed config, unable to decode provider. Cause: {{index .cause}}",
+					map[string]interface{}{
+						"event": "parse_error",
+						"cause": err.Error(),
+					})
+				return nil, shared.ErrParse
 			}
 		default:
-			return nil, fmt.Errorf("unsupported provider %s", providerName)
+			output.Error(shared.ErrApi.ExitCode,
+				"Unsupported provider {{index .provider}}.",
+				map[string]interface{}{
+					"event": "api_error",
+					"provider": providerName,
+				})
+			return nil, shared.ErrApi
 		}
 		providers = append(providers, oneProvider)
 	}
 
 	if len(providers) == 0 {
-		return nil, errors.New("no providers")
+		output.Error(shared.ErrApi.ExitCode,
+			"No provider.",
+			map[string]interface{}{
+				"event": "api_error",
+			})
+		return nil, shared.ErrApi
 	}
 
 	return providers, nil
@@ -76,26 +112,47 @@ func (p *proxmoxProvider) Name() string {
 }
 
 func (p *proxmoxProvider) CreateVM(vm *VM, images []*Image) error {
-	if err := p.ensureImage(vm, images); err != nil {
+	if file, err := p.ensureImage(vm, images); err != nil {
 		return err
+	} else {
+		fmt.Println(file)
 	}
 
 	return nil
 }
 
-func (p *proxmoxProvider) ensureImage(vm *VM, images []*Image) error {
+func (p *proxmoxProvider) ensureImage(vm *VM, images []*Image) (file string, err error) {
 	image, err := p.getImage(vm.Image.Name, images)
 	if err != nil {
-		return err
+		return
 	}
 
-	isoGet := get.NewIsoGetCommand()
-	isoGet.SetArgs([]string{
-		"--flavor",	image.Flavor,
+	isoGetArgs := []string{
+		"iso",
+		"get",
+		"--flavor", image.Flavor,
 		"--target-dir", tempDir,
+		"--output-format", shared.OutputFormatJson,
 		"--reuse",
+	}
+	isoGet := exec.Command("homelab", isoGetArgs...)
+
+	result, err := shared.HandledJson(isoGet.CombinedOutput())(func(data map[string]interface{}) (interface{}, error) {
+		if len(data) > 0 {
+			switch strings.ToUpper(data["level"].(string)) {
+			case "INFO", "DEBUG":
+				return data["file"], nil
+			case "ERROR":
+				return nil, errors.New(data["message"].(string))
+			}
+		}
+		return nil, errors.New("unknown_return_status")
 	})
-	return isoGet.Execute()
+
+	if result != nil {
+		file = result.(string)
+	}
+	return
 }
 
 func (p *proxmoxProvider) getImage(name string, images []*Image) (*Image, error) {

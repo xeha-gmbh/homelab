@@ -1,7 +1,7 @@
 package bootstrap
 
 import (
-	"fmt"
+	"github.com/imulab/homelab/shared"
 	"gopkg.in/yaml.v2"
 	"os"
 )
@@ -9,20 +9,40 @@ import (
 func ParseConfig(path string) (Config, error) {
 	f, err := os.Open(path)
 	if err != nil {
-		return nil, fmt.Errorf("failed to open %s: %s", path, err.Error())
+		output.Error(shared.ErrParse.ExitCode,
+			"Unable to open file {{index .file}}. Cause: {{index .cause}}",
+			map[string]interface{}{
+				"event": "parse_error",
+				"file": path,
+				"cause": err.Error(),
+			})
+		return nil, shared.ErrParse
 	}
 
 	raw := make(map[string]interface{})
 	err = yaml.NewDecoder(f).Decode(&raw)
 	if err != nil {
-		return nil, fmt.Errorf("failed to decode %s: %s", path, err.Error())
+		output.Error(shared.ErrParse.ExitCode,
+			"Unable to parse file {{index .file}}. Cause: {{index .cause}}",
+			map[string]interface{}{
+				"event": "parse_error",
+				"file": path,
+				"cause": err.Error(),
+			})
+		return nil, shared.ErrParse
 	}
 
 	switch raw["version"].(string) {
 	case "1":
 		return parseV1Config(raw)
 	default:
-		return nil, fmt.Errorf("api version %s not supported", raw["version"].(string))
+		output.Error(shared.ErrApi.ExitCode,
+			"Unsupported API version {{index .version}}",
+			map[string]interface{}{
+				"event": "api_error",
+				"version": raw["version"].(string),
+			})
+		return nil, shared.ErrApi
 	}
 }
 
