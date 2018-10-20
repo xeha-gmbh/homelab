@@ -24,11 +24,13 @@ Then, the preseed file is copied in, updates the installation menu to accept the
 
 ```bash
 $ sudo -s
-$ chmod +x ./ubuntu-auto.sh
-$ ./ubuntu-auto.sh \
+$ chmod +x ./scripts/ubuntu-preseed.sh
+$ ./scripts/ubuntu-preseed.sh \
     --seed=/tmp/imulab.seed \
     --flavor=bionic64 \
     --workspace=/tmp \
+    --input=/tmp/ubuntu-18.04-lts.iso \
+    --output=/tmp/ubuntu-autoinstall.iso \
     --bootable \
     --debug \
     --reuse
@@ -39,6 +41,8 @@ $ ./ubuntu-auto.sh \
 |`--seed`|`-s`|yes|path to preseed file|
 |`--flavor`|`-v`|no|`{bionic64,xenial64}`, default `bionic64`|
 |`--workspace`|`-w`|yes|directory to place temp files|
+|`--input`|`-i`|no|`ubuntu.iso`|
+|`--output`|`-o`|no|`ubuntu-auto.iso`|
 |`--bootable`|`-b`|no|`{y,n}`, default `n`|
 |`--reuse`|`-r`|no|`{y,n}`, default `n`. Whether to reuse assets.|
 |`--debug`|`-d`|no|`{y,n}`, default `n`. Whether to print debug messages.|
@@ -49,7 +53,9 @@ $ ./ubuntu-auto.sh \
 $ sudo -s
 $ homelab iso auto \
     --flavor=ubuntu/bionic64 \
-    --target-dir=/tmp \
+    --workspace=/tmp \
+    --input-iso=/tmp/ubuntu-18.04-lts.iso \
+    --output-iso=/tmp/ubuntu-autoinstall.iso \
     --timezone=America/Toronto \
     --username=imulab \
     --password=s3cret \
@@ -61,7 +67,8 @@ $ homelab iso auto \
     --name-servers=8.8.8.8 \
     --usb-boot \
     --reuse \
-    --debug
+    --debug \
+    --output-format=json
 ```
 
 The above command downloads a new Ubuntu 18.04 LTS server image, or reuses one from workspace if it exists. It then configures
@@ -73,7 +80,9 @@ Parameters are described as follows:
 |Flag|Required|Default|Content|
 |---|---|---|---|
 |`--flavor`|no|`ubuntu/bionic64`|Flavor of the OS. {ubuntu/bionic64, ubuntu/xenial64} is supported.|
-|`--target-dir`|no|`/tmp`|Workspace of the command. All temp files and the resulting ISO is placed here.|
+|`--workspace`|no|`/tmp`|Workspace of the command. All temp files and the resulting ISO is placed here.|
+|`--input-iso`|yes|--|Path to the downloaded iso file|
+|`--output-iso`|yes|--|Path to the converted iso file|
 |`--timezone`|no|`America/Toronto`|Timezone of the system|
 |`--username`|no|`imulab`|Username of the new user.|
 |`--password`|yes|--|Password of the new user. Right now, the seed file does not crypt, and uses plain text.|
@@ -86,6 +95,7 @@ Parameters are described as follows:
 |`--usb-boot`|no|`false`|Whether to make the remastered ISO usb bootable.|
 |`--reuse`|no|`false`|Whether to reuse existing original ISO in the workspace. If false, will download new one every time.|
 |`--debug`|no|`false`|Whether to print debug messages.|
+|`--output-format`|no|`text`|Format for the print out. {`text`,`json`}|
 
 **Note** Ubuntu 18.04 LTS now uses [Subiquity](https://github.com/CanonicalLtd/subiquity) as the default 
 [Live Server](http://releases.ubuntu.com/bionic/) installer. The original pressed file no longer works. Instead, Subiquity
