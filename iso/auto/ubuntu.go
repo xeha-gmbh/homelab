@@ -108,19 +108,23 @@ func (p *UbuntuPreseedProvider) RemasterISO(payload *Payload) (string, error) {
 func (p *UbuntuPreseedProvider) parseTemplateAndWriteToFile(payload *Payload) (string, error) {
 	var (
 		err        error
+		sourcePath string
 		targetPath string
 		targetFile *os.File
 		tmpl       *template.Template
 	)
+
+	sourcePath = filepath.Join(payload.OutputPath, preseedDefaultTemplate)
 
 	targetPath = filepath.Join(payload.OutputPath, preseedName)
 	if targetFile, err = os.Create(targetPath); err != nil {
 		return "", err
 	}
 
-	if tmpl, err = template.ParseFiles(filepath.Join(payload.OutputPath, preseedDefaultTemplate)); err != nil {
+	if tmpl, err = template.New(filepath.Base(sourcePath)).ParseFiles(sourcePath); err != nil {
 		return "", err
-	} else if err = tmpl.Execute(targetFile, payload); err != nil {
+	}
+	if err = tmpl.Execute(targetFile, payload); err != nil {
 		return "", err
 	}
 
