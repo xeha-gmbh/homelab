@@ -11,7 +11,8 @@ const (
 )
 
 var (
-	output MessagePrinter
+	output 		MessagePrinter
+	extraArgs	*ExtraArgs
 )
 
 func NewBootstrapCommand() *cobra.Command {
@@ -24,7 +25,8 @@ func NewBootstrapCommand() *cobra.Command {
 			if err := cmd.ParseFlags(args); err != nil {
 				return err
 			}
-			output = WithConfig(cmd, &payload.ExtraArgs)
+			extraArgs = &payload.ExtraArgs
+			output = WithConfig(cmd, extraArgs)
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
