@@ -9,10 +9,10 @@ FLAVOR_XENIAL_64=xenial64
 DOWNLOAD_URL="-"
 DOWNLOAD_BIONIC_64_URL="http://cdimage.ubuntu.com/ubuntu/releases/18.04/release/ubuntu-18.04.1-server-amd64.iso"
 DOWNLOAD_XENIAL_64_URL="http://releases.ubuntu.com/xenial/ubuntu-16.04.5-server-amd64.iso"
-OLD_ISO_DIR="iso_old"
-NEW_ISO_DIR="iso_new"
-OLD_ISO_NAME="ubuntu.iso"
-NEW_ISO_NAME="ubuntu-auto.iso"
+OLD_ISO_MOUNT_DIR="iso_old"
+NEW_ISO_MOUNT_DIR="iso_new"
+OLD_ISO="ubuntu.iso"
+NEW_ISO="ubuntu-auto.iso"
 BOOTABLE=n
 REUSE=n
 WORKSPACE=-
@@ -27,7 +27,7 @@ info()
 # define debug function
 debug()
 {
-	if [[ $DEBUG == 'y' ]]; then
+	if [[ ${DEBUG} == 'y' ]]; then
 		echo "[DEBUG] $1"
 	fi
 }
@@ -37,7 +37,7 @@ program_is_installed()
 {
 	local return_=1
     type $1 >/dev/null 2>&1 || { local return_=0; }
-    echo $return_
+    echo ${return_}
 }
 
 # check if current user is root
@@ -54,31 +54,31 @@ validate()
 {
 	case "$FLAVOR" in
 		"$FLAVOR_BIONIC_64" )
-			DOWNLOAD_URL=$DOWNLOAD_BIONIC_64_URL
+			DOWNLOAD_URL=${DOWNLOAD_BIONIC_64_URL}
 			;;
 		"$FLAVOR_XENIAL_64" )
-			DOWNLOAD_URL=$DOWNLOAD_XENIAL_64_URL
+			DOWNLOAD_URL=${DOWNLOAD_XENIAL_64_URL}
 			;;
 		* )
 			echo "value of [-v|--flavor] option is not one of [$FLAVOR_BIONIC_64|$FLAVOR_XENIAL_64]"
 			exit 4
 	esac
 	# SEED
-	if [[ $SEED == "-" ]]; then
+	if [[ ${SEED} == "-" ]]; then
 		echo "[-s|--seed] is not specified"
 		exit 4
-	elif [[ ! -r $SEED ]]; then
+	elif [[ ! -r ${SEED} ]]; then
 		echo "value of [-s|--seed] option is not readable"
 		exit 4
 	fi
 	# WORKSPACE
-	if [[ $WORKSPACE == "-" ]]; then
+	if [[ ${WORKSPACE} == "-" ]]; then
 		echo "[-w|--workspace] is not specified"
 		exit 4
-	elif [[ ! -d $WORKSPACE ]]; then
+	elif [[ ! -d ${WORKSPACE} ]]; then
 		echo "value of [-s|--seed] option is not a directory"
 		exit 4
-	elif [[ ! -w $WORKSPACE ]]; then
+	elif [[ ! -w ${WORKSPACE} ]]; then
 		echo "value of [-s|--seed] option is not a writable directory"
 		exit 4
 	fi
@@ -96,15 +96,15 @@ is_mounted()
 # define clean up function
 cleanup()
 {
-	if grep -qs "$WORKSPACE/$OLD_ISO_DIR" /proc/mounts; then
-		debug "unmounting $WORKSPACE/$OLD_ISO_DIR"
-		umount "$WORKSPACE/$OLD_ISO_DIR" > /dev/null 2>&1
+	if grep -qs "$WORKSPACE/$OLD_ISO_MOUNT_DIR" /proc/mounts; then
+		debug "unmounting $WORKSPACE/$OLD_ISO_MOUNT_DIR"
+		umount "$WORKSPACE/$OLD_ISO_MOUNT_DIR" > /dev/null 2>&1
 	fi
-	if [[ $REUSE == 'n' ]]; then
-		rm -rf "$WORKSPACE/$OLD_ISO_NAME" > /dev/null 2>&1
+	if [[ ${REUSE} == 'n' ]]; then
+		rm -rf "$OLD_ISO" > /dev/null 2>&1
 	fi
-	rm -rf "$WORKSPACE/$OLD_ISO_DIR" > /dev/null 2>&1
-	rm -rf "$WORKSPACE/$NEW_ISO_DIR" > /dev/null 2>&1
+	rm -rf "$WORKSPACE/$OLD_ISO_MOUNT_DIR" > /dev/null 2>&1
+	rm -rf "$WORKSPACE/$NEW_ISO_MOUNT_DIR" > /dev/null 2>&1
 
 	debug "cleaned up."
 }
@@ -112,13 +112,13 @@ cleanup()
 # define obtain ISO function
 obtain_iso()
 {
-	if [[ $REUSE == 'y' ]] && [[ -e $WORKSPACE/$OLD_ISO_NAME ]]; then
-		debug "reused $WORKSPACE/$OLD_ISO_NAME"
+	if [[ ${REUSE} == 'y' ]] && [[ -e ${OLD_ISO} ]]; then
+		debug "reused $OLD_ISO"
 		return
 	fi
 	
-	echo "downloading $DOWNLOAD_URL to $WORKSPACE/$OLD_ISO_NAME"
-	wget -O $WORKSPACE/$OLD_ISO_NAME $DOWNLOAD_URL
+	echo "downloading $DOWNLOAD_URL to $OLD_ISO"
+	wget -O ${OLD_ISO} ${DOWNLOAD_URL}
 }
 
 # ======================================================
@@ -132,8 +132,8 @@ if [[ ${PIPESTATUS[0]} -ne 4 ]]; then
     exit 1
 fi
 # define options
-OPTS=s:v:w:drb
-LONG_OPTS=seed:,flavor:,workspace:,debug,reuse,bootable
+OPTS=s:v:w:i:o:drb
+LONG_OPTS=seed:,flavor:,workspace:input-iso:output-iso:,debug,reuse,bootable
 # parse options
 ! PARSED=$(getopt --options=$OPTS --longoptions=$LONG_OPTS --name "$0" -- "$@")
 if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
@@ -156,6 +156,14 @@ while true; do
 			WORKSPACE="$2"
 			shift 2
 			;;
+		-i|--input-iso)
+		    OLD_ISO="$2"
+		    shift 2
+		    ;;
+		-o|--output-iso)
+		    NEW_ISO="$2"
+		    shift 2
+		    ;;
 		-r|--reuse)
 			REUSE="y"
 			shift
@@ -185,7 +193,7 @@ done
 # validation
 validate
 debug "options parsed and validated"
-debug "SEED=$SEED, FLAVOR=$FLAVOR, DOWNLOAD_URL=$DOWNLOAD_URL, WORKSPACE=$WORKSPACE, REUSE=$REUSE, BOOTABLE=$BOOTABLE"
+debug "SEED=$SEED, FLAVOR=$FLAVOR, DOWNLOAD_URL=$DOWNLOAD_URL, WORKSPACE=$WORKSPACE, OLD_ISO=$OLD_ISO, NEW_ISO=$NEW_ISO, REUSE=$REUSE, BOOTABLE=$BOOTABLE"
 
 # preparation
 check_root
@@ -200,7 +208,7 @@ if [ $(program_is_installed "mkpasswd") -eq 0 ] || [ $(program_is_installed "mki
     (apt-get -y update > /dev/null 2>&1) &
     (apt-get -y install whois genisoimage > /dev/null 2>&1)
 fi
-if [[ $BOOTABLE == 'y' ]]; then
+if [[ ${BOOTABLE} == 'y' ]]; then
 	if [ $(program_is_installed "isohybrid") -eq 0 ]; then
 		info "install 'syslinux' and 'syslinux-utils'"
 		(apt-get -y update > /dev/null 2>&1) &
@@ -209,47 +217,47 @@ if [[ $BOOTABLE == 'y' ]]; then
 fi
 
 info "remastering installation media"
-mkdir -p $WORKSPACE/$OLD_ISO_DIR
-mkdir -p $WORKSPACE/$NEW_ISO_DIR
+mkdir -p ${WORKSPACE}/${OLD_ISO_MOUNT_DIR}
+mkdir -p ${WORKSPACE}/${NEW_ISO_MOUNT_DIR}
 
 # mount installation media
-if grep -qs "$WORKSPACE/$OLD_ISO_DIR" /proc/mounts; then
-    debug "$WORKSPACE/$OLD_ISO_DIR is already mounted, continue"
+if grep -qs "$WORKSPACE/$OLD_ISO_MOUNT_DIR" /proc/mounts; then
+    debug "$WORKSPACE/$OLD_ISO_MOUNT_DIR is already mounted, continue"
 else
-    (mount -o loop $WORKSPACE/$OLD_ISO_NAME $WORKSPACE/$OLD_ISO_DIR > /dev/null 2>&1)
-    debug "$WORKSPACE/$OLD_ISO_DIR mounted"
+    mount -o loop ${OLD_ISO} ${WORKSPACE}/${OLD_ISO_MOUNT_DIR} > /dev/null 2>&1
+    debug "$WORKSPACE/$OLD_ISO_MOUNT_DIR mounted"
 fi
 
 # copy to new
-cp -rT $WORKSPACE/$OLD_ISO_DIR $WORKSPACE/$NEW_ISO_DIR > /dev/null 2>&1
-debug "copied from $WORKSPACE/$OLD_ISO_DIR to $WORKSPACE/$NEW_ISO_DIR"
+cp -rT ${WORKSPACE}/${OLD_ISO_MOUNT_DIR} ${WORKSPACE}/${NEW_ISO_MOUNT_DIR} > /dev/null 2>&1
+debug "copied from $WORKSPACE/$OLD_ISO_MOUNT_DIR to $WORKSPACE/$NEW_ISO_MOUNT_DIR"
 
 # set language
-echo en > $WORKSPACE/$NEW_ISO_DIR/isolinux/lang
+echo en > ${WORKSPACE}/${NEW_ISO_MOUNT_DIR}/isolinux/lang
 debug "language set to en"
 
 # update timeout
-sed -i -r 's/timeout\s+[0-9]+/timeout 1/g' $WORKSPACE/$NEW_ISO_DIR/isolinux/isolinux.cfg
+sed -i -r 's/timeout\s+[0-9]+/timeout 1/g' ${WORKSPACE}/${NEW_ISO_MOUNT_DIR}/isolinux/isolinux.cfg
 debug "menu timeout updated to 1"
 
 # copy seed file
-cp -rT $SEED $WORKSPACE/$NEW_ISO_DIR/preseed/imulab.seed
-debug "seed file $SEED copied to $WORKSPACE/$NEW_ISO_DIR/preseed/imulab.seed"
+cp -rT ${SEED} ${WORKSPACE}/${NEW_ISO_MOUNT_DIR}/preseed/imulab.seed
+debug "seed file $SEED copied to $WORKSPACE/$NEW_ISO_MOUNT_DIR/preseed/imulab.seed"
 
 # calculate checksum
-seed_checksum=$(md5sum $WORKSPACE/$NEW_ISO_DIR/preseed/imulab.seed | awk '{ print $1 }')
+seed_checksum=$(md5sum $WORKSPACE/$NEW_ISO_MOUNT_DIR/preseed/imulab.seed | awk '{ print $1 }')
 debug "seed file $SEED checksum is $seed_checksum"
 
 # update install menu
 sed -i "/label install/ilabel autoinstall\n\
   menu label ^Autoinstall Imulab Ubuntu Server\n\
   kernel /install/vmlinuz\n\
-  append file=/cdrom/preseed/ubuntu-server.seed initrd=/install/initrd.gz auto=true priority=high preseed/file=/cdrom/preseed/imulab.seed preseed/file/checksum=$seed_checksum --" $WORKSPACE/$NEW_ISO_DIR/isolinux/txt.cfg
-debug "isolinux cfg file $WORKSPACE/$NEW_ISO_DIR/isolinux/txt.cfg updated"
+  append file=/cdrom/preseed/ubuntu-server.seed initrd=/install/initrd.gz auto=true priority=high preseed/file=/cdrom/preseed/imulab.seed preseed/file/checksum=$seed_checksum --" ${WORKSPACE}/${NEW_ISO_MOUNT_DIR}/isolinux/txt.cfg
+debug "isolinux cfg file $WORKSPACE/$NEW_ISO_MOUNT_DIR/isolinux/txt.cfg updated"
 
 # create iso image
 debug "making new iso image"
-pushd $WORKSPACE/$NEW_ISO_DIR > /dev/null
+pushd ${WORKSPACE}/${NEW_ISO_MOUNT_DIR} > /dev/null
 	mkisofs -D -r -V "IMULAB_UBUNTU" \
 		 -cache-inodes -J -l \
 		 -b isolinux/isolinux.bin \
@@ -257,16 +265,16 @@ pushd $WORKSPACE/$NEW_ISO_DIR > /dev/null
 		 -no-emul-boot \
 		 -boot-load-size 4 \
 		 -boot-info-table \
-		 -o $WORKSPACE/$NEW_ISO_NAME . > /dev/null 2>&1
+		 -o ${NEW_ISO} . > /dev/null 2>&1
 popd > /dev/null
-if [[ $BOOTABLE == "y" ]]; then
-    isohybrid $WORKSPACE/$NEW_ISO_NAME
-    debug "made $WORKSPACE/$NEW_ISO_NAME bootable via usb"
+if [[ ${BOOTABLE} == "y" ]]; then
+    isohybrid ${NEW_ISO}
+    debug "made $NEW_ISO bootable via usb"
 fi
 
 # clean before exit
-if [[ $DEBUG == 'n' ]]; then
+if [[ ${DEBUG} == 'n' ]]; then
 	cleanup
 fi
 
-info "SUCCESS: auto installation media remastered at $WORKSPACE/$NEW_ISO_NAME"
+info "SUCCESS: auto installation media remastered at $NEW_ISO"
