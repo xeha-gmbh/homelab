@@ -27,6 +27,8 @@ const (
 
 	flagSeed      = "--seed"
 	flagFlavor    = "--flavor"
+	flagInput     = "--input"
+	flagOutput    = "--output"
 	flagWorkspace = "--workspace"
 	flagBootable  = "--bootable"
 	flagReuse     = "--reuse"
@@ -49,9 +51,9 @@ func (p *UbuntuPreseedProvider) SupportsFlavor(flavor string) bool {
 }
 
 func (p *UbuntuPreseedProvider) CheckDependencies(payload *Payload) (bool, error) {
-	if err := p.downloadPreseedScript(payload.OutputPath); err != nil {
+	if err := p.downloadPreseedScript(payload.Workspace); err != nil {
 		return false, err
-	} else if err := p.downloadDefaultPreseedTemplate(payload.OutputPath); err != nil {
+	} else if err := p.downloadDefaultPreseedTemplate(payload.Workspace); err != nil {
 		return false, err
 	}
 	return true, nil
@@ -78,7 +80,9 @@ func (p *UbuntuPreseedProvider) RemasterISO(payload *Payload) (string, error) {
 	args := []string{
 		flagSeed, parsedSeed,
 		flagFlavor, payload.Flavor,
-		flagWorkspace, payload.OutputPath,
+		flagWorkspace, payload.Workspace,
+		flagInput, payload.InputIso,
+		flagOutput, payload.OutputIso,
 	}
 	if payload.UsbBoot {
 		args = append(args, flagBootable)
@@ -91,7 +95,7 @@ func (p *UbuntuPreseedProvider) RemasterISO(payload *Payload) (string, error) {
 	}
 
 	// execute command
-	remaster := exec.Command(filepath.Join(payload.OutputPath, preseedScript), args...)
+	remaster := exec.Command(filepath.Join(payload.Workspace, preseedScript), args...)
 	remaster.Stdout = os.Stdout
 	remaster.Stderr = os.Stderr
 	if err := remaster.Start(); err != nil {
@@ -101,8 +105,7 @@ func (p *UbuntuPreseedProvider) RemasterISO(payload *Payload) (string, error) {
 		return "", err
 	}
 
-	// TODO hard coded for now, pass to script as params in the future
-	return filepath.Join(payload.OutputPath, "ubuntu-auto.iso"), nil
+	return payload.OutputIso, nil
 }
 
 func (p *UbuntuPreseedProvider) parseTemplateAndWriteToFile(payload *Payload) (string, error) {
@@ -114,9 +117,9 @@ func (p *UbuntuPreseedProvider) parseTemplateAndWriteToFile(payload *Payload) (s
 		tmpl       *template.Template
 	)
 
-	sourcePath = filepath.Join(payload.OutputPath, preseedDefaultTemplate)
+	sourcePath = filepath.Join(payload.Workspace, preseedDefaultTemplate)
 
-	targetPath = filepath.Join(payload.OutputPath, preseedName)
+	targetPath = filepath.Join(payload.Workspace, preseedName)
 	if targetFile, err = os.Create(targetPath); err != nil {
 		return "", err
 	}

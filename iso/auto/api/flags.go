@@ -2,8 +2,9 @@ package api
 
 const (
 	FlagFlavor      = "flavor"
-	FlagInputIso    = "iso"
-	FlagOutputPath  = "target-dir"
+	FlagInputIso    = "input-iso"
+	FlagOutputIso	= "output-iso"
+	FlagWorkspace  	= "workspace"
 	FlagUsbBoot     = "usb-boot"
 	FlagReuse       = "reuse"
 	FlagTimezone    = "timezone"

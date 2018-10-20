@@ -2,7 +2,7 @@ package api
 
 const (
 	DefaultFlavor      = "ubuntu/bionic64"
-	DefaultOutputPath  = "/tmp"
+	DefaultWorkspace   = "/tmp"
 	DefaultUsbBoot     = true
 	DefaultReuse       = false
 	DefaultTimeZone    = "America/Toronto"

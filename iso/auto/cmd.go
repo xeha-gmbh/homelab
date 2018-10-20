@@ -21,7 +21,9 @@ var (
 type Payload struct {
 	ExtraArgs
 	Flavor      string `json:"flavor"`
-	OutputPath  string `json:"output_path"`
+	InputIso 	string `json:"input_iso"`
+	OutputIso 	string `json:"output_iso"`
+	Workspace  	string `json:"workspace"`
 	UsbBoot     bool   `json:"usb_boot"`
 	Reuse       bool   `json:"reuse"`
 	Timezone    string `json:"timezone"`
@@ -119,6 +121,7 @@ func NewIsoAutoCommand() *cobra.Command {
 func markIsoAutoCommandRequiredFlags(cmd *cobra.Command) {
 	for _, f := range []string{
 		api.FlagInputIso,
+		api.FlagOutputIso,
 		api.FlagPassword,
 		api.FlagHostname,
 	} {
@@ -134,7 +137,11 @@ func addIsoAutoCommandFlags(flagSet *flag.FlagSet, payload *Payload) {
 			flavorUbuntuBionic64NonLive,
 			flavorUbuntuXenial64,
 		}, "|")+"]")
-	flagSet.StringVar(&payload.OutputPath, api.FlagOutputPath, api.DefaultOutputPath,
+	flagSet.StringVar(&payload.InputIso, api.FlagInputIso, noDefault,
+		"Path to the input ISO image.")
+	flagSet.StringVar(&payload.OutputIso, api.FlagOutputIso, noDefault,
+		"Path to the output ISO image.")
+	flagSet.StringVar(&payload.Workspace, api.FlagWorkspace, api.DefaultWorkspace,
 		"Path where output files should be placed.")
 	flagSet.BoolVar(&payload.UsbBoot, api.FlagUsbBoot, api.DefaultUsbBoot,
 		"Whether the output ISO image should be made boot-able via USB.")
