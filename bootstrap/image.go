@@ -14,7 +14,7 @@ func ParseImages(data map[string]interface{}) ([]*Image, error) {
 			map[string]interface{}{
 				"event": "parse_error",
 				"error": fmt.Sprintf("expect key %s to be a list.", keyImages),
-				"key": keyImages,
+				"key":   keyImages,
 			})
 		return nil, shared.ErrParse
 	}
@@ -39,11 +39,11 @@ func ParseImages(data map[string]interface{}) ([]*Image, error) {
 }
 
 type Image struct {
-	Name 	string 	`yaml:"name"`
-	Flavor 	string 	`yaml:"flavor"`
-	Auto 	bool	`yaml:"auto"`
-	UsbBoot	bool 	`yaml:"usb-boot"`
-	Reuse 	bool 	`yaml:"reuse"`
+	Name    string `yaml:"name"`
+	Flavor  string `yaml:"flavor"`
+	Auto    bool   `yaml:"auto"`
+	UsbBoot bool   `yaml:"usb-boot"`
+	Reuse   bool   `yaml:"reuse"`
 }
 
 const (

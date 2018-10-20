@@ -65,7 +65,7 @@ func ParseProviders(data map[string]interface{}) ([]Provider, error) {
 			output.Fatal(shared.ErrApi.ExitCode,
 				"Unsupported provider {{index .provider}}.",
 				map[string]interface{}{
-					"event": "api_error",
+					"event":    "api_error",
 					"provider": providerName,
 				})
 			return nil, shared.ErrApi
@@ -84,6 +84,7 @@ func ParseProviders(data map[string]interface{}) ([]Provider, error) {
 
 	return providers, nil
 }
+
 // ---------------------------------------------------------------------------------------------------------------------
 
 // Interface for all providers
@@ -91,20 +92,21 @@ type Provider interface {
 	Name() string
 	CreateVM(vm *VM, images []*Image) error
 }
+
 // ---------------------------------------------------------------------------------------------------------------------
 
 // The proxmox provider
 type proxmoxProvider struct {
-	Api 		string 		`yaml:"api"`
-	Identity	struct{
-		Realm		string		`yaml:"realm"`
-		Username	string		`yaml:"username"`
-		Password 	string 		`yaml:"password"`
-	}						`yaml:"identity"`
-	DataStores	[]struct{
-		Name 		string		`yaml:"name"`
-		Tags		[]string 	`yaml:"tags"`
-	}						`yaml:"datastores"`
+	Api      string `yaml:"api"`
+	Identity struct {
+		Realm    string `yaml:"realm"`
+		Username string `yaml:"username"`
+		Password string `yaml:"password"`
+	} `yaml:"identity"`
+	DataStores []struct {
+		Name string   `yaml:"name"`
+		Tags []string `yaml:"tags"`
+	} `yaml:"datastores"`
 }
 
 func (p *proxmoxProvider) Name() string {
@@ -168,8 +170,8 @@ func (p *proxmoxProvider) getImage(name string, images []*Image) (*Image, error)
 
 const (
 	keyInfra = "infra"
-	keyName = "name"
+	keyName  = "name"
 	proxmox  = "proxmox"
 
-	tempDir	= "/tmp"
+	tempDir = "/tmp"
 )

@@ -11,35 +11,35 @@ import (
 )
 
 const (
-	flagFlavor 		= "flavor"
-	flagTargetDir	= "target-dir"
-	flagReuse 		= "reuse"
+	flagFlavor    = "flavor"
+	flagTargetDir = "target-dir"
+	flagReuse     = "reuse"
 
-	defaultTargetDir 	= "/tmp"
-	defaultReuse 		= false
+	defaultTargetDir = "/tmp"
+	defaultReuse     = false
 
-	flavorUbuntuBionic64Live		= "ubuntu/bionic64.live"
-	flavorUbuntuBionic64LiveUrl		= "http://releases.ubuntu.com/bionic/ubuntu-18.04.1-live-server-amd64.iso"
-	flavorUbuntuBionic64NonLive		= "ubuntu/bionic64"
-	flavorUbuntuBionic64NonLiveUrl	= "http://cdimage.ubuntu.com/ubuntu/releases/18.04/release/ubuntu-18.04.1-server-amd64.iso"
-	flavorUbuntuXenial64			= "ubuntu/xenial64"
-	flavorUbuntuXenial64Url 		= "http://releases.ubuntu.com/xenial/ubuntu-16.04.5-server-amd64.iso"
+	flavorUbuntuBionic64Live       = "ubuntu/bionic64.live"
+	flavorUbuntuBionic64LiveUrl    = "http://releases.ubuntu.com/bionic/ubuntu-18.04.1-live-server-amd64.iso"
+	flavorUbuntuBionic64NonLive    = "ubuntu/bionic64"
+	flavorUbuntuBionic64NonLiveUrl = "http://cdimage.ubuntu.com/ubuntu/releases/18.04/release/ubuntu-18.04.1-server-amd64.iso"
+	flavorUbuntuXenial64           = "ubuntu/xenial64"
+	flavorUbuntuXenial64Url        = "http://releases.ubuntu.com/xenial/ubuntu-16.04.5-server-amd64.iso"
 
-	noDefault	= ""
+	noDefault = ""
 )
 
 type IsoGetPayload struct {
 	ExtraArgs
-	Flavor 		string
-	TargetDir 	string
-	Reuse 		bool
+	Flavor    string
+	TargetDir string
+	Reuse     bool
 }
 
 func NewIsoGetCommand() *cobra.Command {
 	payload := new(IsoGetPayload)
 
 	cmd := &cobra.Command{
-		Use: "get",
+		Use:   "get",
 		Short: "get system iso",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			cmd.SetOutput(os.Stdout)
@@ -47,7 +47,7 @@ func NewIsoGetCommand() *cobra.Command {
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var (
-				filename string
+				filename    string
 				downloadUrl string
 			)
 
@@ -66,8 +66,8 @@ func NewIsoGetCommand() *cobra.Command {
 					1,
 					"Flavor {{index .flavor}} is not supported.",
 					map[string]interface{}{
-						"event": "unsupported_flavor",
-						"flavor": payload.Flavor,
+						"event":     "unsupported_flavor",
+						"flavor":    payload.Flavor,
 						"exit-code": 1,
 					})
 				return errors.New("unsupported_flavor")
@@ -78,7 +78,7 @@ func NewIsoGetCommand() *cobra.Command {
 					"Reused file at {{index .file}}, no download was executed.",
 					map[string]interface{}{
 						"event": "reused_file",
-						"file": filename,
+						"file":  filename,
 						"reuse": payload.Reuse,
 					})
 				return nil
@@ -95,16 +95,16 @@ func NewIsoGetCommand() *cobra.Command {
 				"Downloading from {{index .url}}, please wait.",
 				map[string]interface{}{
 					"event": "download_in_progress",
-					"url": downloadUrl,
+					"url":   downloadUrl,
 				})
 			if err := wget.Run(); err != nil {
 				WithConfig(cmd, &payload.ExtraArgs).Fatal(
 					2,
 					"Download from {{index .url}} failed. Cause: {{index .cause}}",
 					map[string]interface{}{
-						"event": "download_error",
-						"url": downloadUrl,
-						"cause": err.Error(),
+						"event":     "download_error",
+						"url":       downloadUrl,
+						"cause":     err.Error(),
 						"exit-code": 2,
 					})
 				return errors.New("download_error")
@@ -113,9 +113,9 @@ func NewIsoGetCommand() *cobra.Command {
 			WithConfig(cmd, &payload.ExtraArgs).Info(
 				"Image {{index .flavor}} downloaded to {{index .file}}.",
 				map[string]interface{}{
-					"event": "download_success",
+					"event":  "download_success",
 					"flavor": payload.Flavor,
-					"file": filename,
+					"file":   filename,
 				})
 			return nil
 		},
@@ -134,11 +134,11 @@ func markIsoGetCommandRequiredFlags(cmd *cobra.Command) {
 
 func parseIsoGetCommandFlags(cmd *cobra.Command, payload *IsoGetPayload) {
 	cmd.Flags().StringVar(&payload.Flavor, flagFlavor, noDefault,
-		"flavor of the image to download. [" + strings.Join([]string{
+		"flavor of the image to download. ["+strings.Join([]string{
 			flavorUbuntuBionic64Live,
 			flavorUbuntuBionic64NonLive,
 			flavorUbuntuXenial64,
-		}, "|") + "]")
+		}, "|")+"]")
 	cmd.Flags().StringVar(&payload.TargetDir, flagTargetDir, defaultTargetDir,
 		"directory to put the downloaded put into.")
 	cmd.Flags().BoolVar(&payload.Reuse, flagReuse, defaultReuse,

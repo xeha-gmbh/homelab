@@ -7,19 +7,19 @@ import (
 
 const (
 	flagConfig = "config"
-	noDefault = ""
+	noDefault  = ""
 )
 
 var (
-	output 	MessagePrinter
+	output MessagePrinter
 )
 
 func NewBootstrapCommand() *cobra.Command {
 	payload := new(Payload)
 
 	cmd := &cobra.Command{
-		Use:"bootstrap",
-		Short:"bootstrap home lab with a single config",
+		Use:   "bootstrap",
+		Short: "bootstrap home lab with a single config",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if err := cmd.ParseFlags(args); err != nil {
 				return err
@@ -46,5 +46,5 @@ func NewBootstrapCommand() *cobra.Command {
 
 type Payload struct {
 	ExtraArgs
-	YamlPath 	string
+	YamlPath string
 }

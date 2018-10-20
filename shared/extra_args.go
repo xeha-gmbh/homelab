@@ -3,16 +3,16 @@ package shared
 import "github.com/spf13/cobra"
 
 const (
-	OutputFormatJson	= "json"
-	OutputFormatText 	= "text"
+	OutputFormatJson = "json"
+	OutputFormatText = "text"
 
-	FlagDebug = "debug"
+	FlagDebug        = "debug"
 	FlagOutputFormat = "output-format"
 )
 
 type ExtraArgs struct {
-	OutputFormat 	string
-	Debug 			bool
+	OutputFormat string
+	Debug        bool
 }
 
 func (ea *ExtraArgs) InjectExtraArgs(cmd *cobra.Command) {

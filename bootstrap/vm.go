@@ -17,9 +17,9 @@ func ParseVMs(data map[string]interface{}) ([]*VM, error) {
 		output.Fatal(1,
 			"Malformed config: {{index .error}}",
 			map[string]interface{}{
-				"event": "parse_error",
+				"event":    "parse_error",
 				"exitCode": 1,
-				"error": fmt.Sprintf("expect key '%s' to be a list", keyVMs),
+				"error":    fmt.Sprintf("expect key '%s' to be a list", keyVMs),
 			})
 		return nil, errors.New("parse_error")
 	}
@@ -31,7 +31,7 @@ func ParseVMs(data map[string]interface{}) ([]*VM, error) {
 			output.Fatal(1,
 				"Malformed config: {{index .error}}",
 				map[string]interface{}{
-					"event": "parse_error",
+					"event":    "parse_error",
 					"exitCode": 1,
 					"error": fmt.Sprintf("expect each '%s' to be a map, but got %s",
 						keyVMs, reflect.TypeOf(oneRawVM).String()),
@@ -44,9 +44,9 @@ func ParseVMs(data map[string]interface{}) ([]*VM, error) {
 			output.Fatal(1,
 				"Malformed config: unable to decode vm. Cause: {{index .cause}}",
 				map[string]interface{}{
-					"event": "parse_error",
+					"event":    "parse_error",
 					"exitCode": 1,
-					"cause": err.Error(),
+					"cause":    err.Error(),
 				})
 			return nil, errors.New("parse_error")
 		}
@@ -59,9 +59,9 @@ func ParseVMs(data map[string]interface{}) ([]*VM, error) {
 					output.Fatal(1,
 						"Malformed config: unable to parse proxmox basic params. Cause: {{index .cause}}",
 						map[string]interface{}{
-							"event": "parse_error",
+							"event":    "parse_error",
 							"exitCode": 1,
-							"cause": err.Error(),
+							"cause":    err.Error(),
 						})
 					return nil, errors.New("parse_error")
 				}
@@ -70,8 +70,8 @@ func ParseVMs(data map[string]interface{}) ([]*VM, error) {
 				output.Fatal(1,
 					"Unsupported proxmox archetype {{index .archetype}}.",
 					map[string]interface{}{
-						"event": "api_error",
-						"exitCode": 1,
+						"event":     "api_error",
+						"exitCode":  1,
 						"archetype": vm.Archetype,
 					})
 				return nil, errors.New("api_error")
@@ -80,7 +80,7 @@ func ParseVMs(data map[string]interface{}) ([]*VM, error) {
 			output.Fatal(1,
 				"Unsupported provider {{index .provider}}.",
 				map[string]interface{}{
-					"event": "api_error",
+					"event":    "api_error",
 					"exitCode": 1,
 					"provider": vm.Provider.Name,
 				})
@@ -94,20 +94,21 @@ func ParseVMs(data map[string]interface{}) ([]*VM, error) {
 }
 
 type VM struct {
-	Id 				string 		`yaml:"id"`
-	Name 			string 		`yaml:"name"`
-	Provider 		struct{
-		Name 	string 					`yaml:"name"`
-		Args 	map[string]interface{}	`yaml:"args"`
-	}							`yaml:"provider"`
-	Image 			struct{
-		Name 	string					`yaml:"name"`
-		Store 	string					`yaml:"store"`
-	}							`yaml:"image"`
-	Archetype 		string 		`yaml:"archetype"`
-	Params 			interface{} `yaml:"-"`
-	Start 			bool 		`yaml:"start"`
+	Id       string `yaml:"id"`
+	Name     string `yaml:"name"`
+	Provider struct {
+		Name string                 `yaml:"name"`
+		Args map[string]interface{} `yaml:"args"`
+	} `yaml:"provider"`
+	Image struct {
+		Name  string `yaml:"name"`
+		Store string `yaml:"store"`
+	} `yaml:"image"`
+	Archetype string      `yaml:"archetype"`
+	Params    interface{} `yaml:"-"`
+	Start     bool        `yaml:"start"`
 }
+
 // ---------------------------------------------------------------------------------------------------------------------
 
 func ParseProxmoxBasicArchetypeParams(data interface{}) (*proxmoxBasicArchetypeParams, error) {
@@ -136,26 +137,26 @@ func ParseProxmoxBasicArchetypeParams(data interface{}) (*proxmoxBasicArchetypeP
 }
 
 type proxmoxBasicArchetypeParams struct {
-	Cpu 	int 		`yaml:"cpu"`
-	Memory 	string 		`yaml:"memory"`
-	Drive 	struct{
-		Store 		string		`yaml:"store"`
-		Size 		string		`yaml:"size"`
-	}					`yaml:"drive"`
-	Network	struct{
+	Cpu    int    `yaml:"cpu"`
+	Memory string `yaml:"memory"`
+	Drive  struct {
+		Store string `yaml:"store"`
+		Size  string `yaml:"size"`
+	} `yaml:"drive"`
+	Network struct {
 		Interface string   `yaml:"interface"`
 		Ip        string   `yaml:"ip"`
 		Mask      string   `yaml:"mask"`
 		Gateway   string   `yaml:"gateway"`
 		Dns       []string `yaml:"dns"`
-	}					`yaml:"network"`
+	} `yaml:"network"`
 	System struct {
-		Timezone 	string 		`yaml:"timezone"`
-		Username 	string 		`yaml:"username"`
-		Password 	string 		`yaml:"password"`
-		Hostname 	string 		`yaml:"hostname"`
-		Domain 		string 		`yaml:"domain"`
-	}					`yaml:"system"`
+		Timezone string `yaml:"timezone"`
+		Username string `yaml:"username"`
+		Password string `yaml:"password"`
+		Hostname string `yaml:"hostname"`
+		Domain   string `yaml:"domain"`
+	} `yaml:"system"`
 }
 
 func (p *proxmoxBasicArchetypeParams) MemoryMB() int {
@@ -198,9 +199,10 @@ func (p *proxmoxBasicArchetypeParams) amountAndUnit(value string) (int, string, 
 	}
 	return i, unit, nil
 }
+
 // ---------------------------------------------------------------------------------------------------------------------
 
 const (
-	keyVMs	= "vms"
+	keyVMs         = "vms"
 	basicArchetype = "basic"
 )

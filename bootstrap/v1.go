@@ -26,10 +26,10 @@ func parseV1Config(data map[string]interface{}) (Config, error) {
 }
 
 type v1Config struct {
-	Providers 	[]Provider		`yaml:"providers"`
-	Images 		[]*Image 		`yaml:"images"`
-	VMs 		[]*VM			`yaml:"vms"`
-	out 		MessagePrinter	`yaml:"-"`
+	Providers []Provider     `yaml:"providers"`
+	Images    []*Image       `yaml:"images"`
+	VMs       []*VM          `yaml:"vms"`
+	out       MessagePrinter `yaml:"-"`
 }
 
 func (c *v1Config) Bootstrap() error {
@@ -43,7 +43,7 @@ func (c *v1Config) Bootstrap() error {
 				"Failed to creating vm [name={{index .name}}]. Cause: {{index .cause}}.",
 				map[string]interface{}{
 					"event": "",
-					"name": vm.Name,
+					"name":  vm.Name,
 					"cause": err.Error(),
 				})
 			return ErrOp
@@ -55,7 +55,7 @@ func (c *v1Config) Bootstrap() error {
 				"Failed to creating vm [name={{index .name}}]. Cause: {{index .cause}}.",
 				map[string]interface{}{
 					"event": "",
-					"name": vm.Name,
+					"name":  vm.Name,
 					"cause": err.Error(),
 				})
 			return ErrOp

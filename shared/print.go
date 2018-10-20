@@ -10,7 +10,7 @@ import (
 )
 
 func WithConfig(cmd *cobra.Command, opt *ExtraArgs) MessagePrinter {
-	return &printMessage{cmd: cmd,opt:opt}
+	return &printMessage{cmd: cmd, opt: opt}
 }
 
 type MessagePrinter interface {
@@ -20,8 +20,8 @@ type MessagePrinter interface {
 }
 
 type printMessage struct {
-	cmd 	*cobra.Command
-	opt 	*ExtraArgs
+	cmd *cobra.Command
+	opt *ExtraArgs
 }
 
 func (p *printMessage) Info(templateText string, args map[string]interface{}) {

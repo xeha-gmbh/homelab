@@ -13,7 +13,7 @@ func ParseConfig(path string) (Config, error) {
 			"Unable to open file {{index .file}}. Cause: {{index .cause}}",
 			map[string]interface{}{
 				"event": "parse_error",
-				"file": path,
+				"file":  path,
 				"cause": err.Error(),
 			})
 		return nil, shared.ErrParse
@@ -26,7 +26,7 @@ func ParseConfig(path string) (Config, error) {
 			"Unable to parse file {{index .file}}. Cause: {{index .cause}}",
 			map[string]interface{}{
 				"event": "parse_error",
-				"file": path,
+				"file":  path,
 				"cause": err.Error(),
 			})
 		return nil, shared.ErrParse
@@ -39,7 +39,7 @@ func ParseConfig(path string) (Config, error) {
 		output.Fatal(shared.ErrApi.ExitCode,
 			"Unsupported API version {{index .version}}",
 			map[string]interface{}{
-				"event": "api_error",
+				"event":   "api_error",
 				"version": raw["version"].(string),
 			})
 		return nil, shared.ErrApi

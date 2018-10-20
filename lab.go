@@ -13,8 +13,8 @@ import (
 )
 
 var (
-	once 	sync.Once
-	labCmd 	*cobra.Command
+	once   sync.Once
+	labCmd *cobra.Command
 )
 
 func GetLabCommand() *cobra.Command {
