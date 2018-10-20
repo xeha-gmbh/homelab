@@ -133,7 +133,7 @@ if [[ ${PIPESTATUS[0]} -ne 4 ]]; then
 fi
 # define options
 OPTS=s:v:w:i:o:drb
-LONG_OPTS=seed:,flavor:,workspace:input-iso:output-iso:,debug,reuse,bootable
+LONG_OPTS=seed:,flavor:,workspace:input:output:,debug,reuse,bootable
 # parse options
 ! PARSED=$(getopt --options=$OPTS --longoptions=$LONG_OPTS --name "$0" -- "$@")
 if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
@@ -156,11 +156,11 @@ while true; do
 			WORKSPACE="$2"
 			shift 2
 			;;
-		-i|--input-iso)
+		-i|--input)
 		    OLD_ISO="$2"
 		    shift 2
 		    ;;
-		-o|--output-iso)
+		-o|--output)
 		    NEW_ISO="$2"
 		    shift 2
 		    ;;
