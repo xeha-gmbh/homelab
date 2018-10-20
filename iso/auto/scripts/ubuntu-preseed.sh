@@ -133,7 +133,7 @@ if [[ ${PIPESTATUS[0]} -ne 4 ]]; then
 fi
 # define options
 OPTS=s:v:w:i:o:drb
-LONG_OPTS=seed:,flavor:,workspace:input:output:,debug,reuse,bootable
+LONG_OPTS=seed:,flavor:,workspace:,input:,output:,debug,reuse,bootable
 # parse options
 ! PARSED=$(getopt --options=$OPTS --longoptions=$LONG_OPTS --name "$0" -- "$@")
 if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
