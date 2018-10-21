@@ -1,7 +1,7 @@
 package vm
 
 import (
-	flag "github.com/spf13/pflag"
+	"github.com/spf13/cobra"
 	"sync"
 )
 
@@ -26,7 +26,7 @@ type Archetype interface {
 	// Returns the list of required flags for the 'lab proxmox vm create ${archetype.name}' command
 	RequiredFlags() []string
 	// Bind flags to its internal payload
-	BindFlags(flagSet *flag.FlagSet)
+	BindFlags(cmd *cobra.Command)
 	// Create VM
 	CreateVM() error
 }

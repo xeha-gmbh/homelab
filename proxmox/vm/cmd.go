@@ -1,8 +1,13 @@
 package vm
 
 import (
-	"github.com/imulab/homelab/proxmox/common"
+	"github.com/imulab/homelab/shared"
 	"github.com/spf13/cobra"
+	"os"
+)
+
+var (
+	output shared.MessagePrinter
 )
 
 func NewProxmoxVMCommand() *cobra.Command {
@@ -27,15 +32,22 @@ func NewProxmoxVMCreateCommand() *cobra.Command {
 			Use:   arch.Use(),
 			Short: arch.Short(),
 			Long:  arch.Long(),
+			PreRunE: func(cmd *cobra.Command, args []string) error {
+				cmd.SetOutput(os.Stdout)
+				if err := cmd.ParseFlags(args); err != nil {
+					return err
+				}
+				return nil
+			},
 			RunE: func(cmd *cobra.Command, args []string) error {
 				if err := arch.CreateVM(); err != nil {
-					return common.HandleError(err)
+					return err
 				}
 				return nil
 			},
 		}
 
-		arch.BindFlags(subCmd.Flags())
+		arch.BindFlags(subCmd)
 		for _, requiredFlag := range arch.RequiredFlags() {
 			subCmd.MarkPersistentFlagRequired(requiredFlag)
 			subCmd.MarkFlagRequired(requiredFlag)

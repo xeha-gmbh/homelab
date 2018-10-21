@@ -58,7 +58,7 @@ func NewProxmoxUploadCommand() *cobra.Command {
 			output.Info("Upload file {{index .file}} is successful.",
 				map[string]interface{}{
 					"event": "upload_success",
-					"file": payload.File,
+					"file":  payload.File,
 				})
 			return nil
 		},

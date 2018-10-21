@@ -3,12 +3,12 @@ package vm
 import (
 	"fmt"
 	"github.com/imulab/homelab/proxmox/common"
+	"github.com/imulab/homelab/shared"
 	"github.com/lithammer/dedent"
-	"github.com/spf13/pflag"
+	"github.com/spf13/cobra"
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"os"
 	"strings"
 )
 
@@ -41,6 +41,8 @@ func init() {
 }
 
 type basicArchetype struct {
+	shared.ExtraArgs
+	_output      shared.MessagePrinter
 	node         string
 	vmId         string
 	vmName       string
@@ -105,48 +107,51 @@ func (b *basicArchetype) RequiredFlags() []string {
 	}
 }
 
-func (b *basicArchetype) BindFlags(flagSet *pflag.FlagSet) {
-	flagSet.StringVar(
+func (b *basicArchetype) BindFlags(cmd *cobra.Command) {
+	b.InjectExtraArgs(cmd)
+	b._output = shared.WithConfig(cmd, &b.ExtraArgs)
+
+	cmd.Flags().StringVar(
 		&b.node, basicArchFlagNode, basicArchDefaultNode,
 		"The node which VM will be created on.",
 	)
-	flagSet.StringVar(
+	cmd.Flags().StringVar(
 		&b.vmId, basicArchFlagVmId, noDefault,
 		"The ID number of the new VM. Must be unique. Required.",
 	)
-	flagSet.StringVar(
+	cmd.Flags().StringVar(
 		&b.vmName, basicArchFlagName, noDefault,
 		"The name of the new VM. Required.",
 	)
-	flagSet.StringVar(
+	cmd.Flags().StringVar(
 		&b.isoStorage, basicArchFlagIsoStorage, basicArchDefaultIsoStorage,
 		"The storage device name for the ISO installation media.",
 	)
-	flagSet.StringVar(
+	cmd.Flags().StringVar(
 		&b.isoImage, basicArchFlagIsoImage, noDefault,
 		"File name for the ISO installation media. Required.",
 	)
-	flagSet.StringVar(
+	cmd.Flags().StringVar(
 		&b.driveStorage, basicArchFlagDriveStorage, noDefault,
 		"The storage device name for the hard drive. Required.",
 	)
-	flagSet.IntVar(
+	cmd.Flags().IntVar(
 		&b.driveSize, basicArchFlagDriveSize, basicArchDefaultDriveSize,
 		"The size in GB of the hard drive.",
 	)
-	flagSet.IntVar(
+	cmd.Flags().IntVar(
 		&b.cpuCores, basicArchFlagCore, basicArchDefaultCore,
 		"Number of of virtual CPU cores.",
 	)
-	flagSet.IntVar(
+	cmd.Flags().IntVar(
 		&b.memory, basicArchFlagMemory, basicArchDefaultMemory,
 		"Amount of virtual memory in MB",
 	)
-	flagSet.StringVar(
+	cmd.Flags().StringVar(
 		&b.networkIFace, basicArchFlagNetworkInterface, basicArchDefaultNetworkIFace,
 		"Host interface to bridge the network to.",
 	)
-	flagSet.BoolVar(
+	cmd.Flags().BoolVar(
 		&b.start, basicArchFlagStart, basicArchDefaultStart,
 		"Starts VM after successful creation.")
 }
@@ -154,13 +159,35 @@ func (b *basicArchetype) BindFlags(flagSet *pflag.FlagSet) {
 // Post to Proxmox API to create a VM. If '--start' is requested, it will attempt to start the VM.
 func (b *basicArchetype) CreateVM() error {
 	if err := b.doCreateVM(); err != nil {
-		return err
-	} else {
-		if b.start {
-			return b.startVM()
-		}
-		return nil
+		b._output.Fatal(shared.ErrOp.ExitCode,
+			"failed to create vm {{index .id}} on proxmox. Cause: {{index .cause}}",
+			map[string]interface{}{
+				"event": "vm_creation_failed",
+				"id":    b.vmId,
+				"cause": err.Error(),
+			})
+		return shared.ErrOp
 	}
+
+	if b.start {
+		if err := b.startVM(); err != nil {
+			b._output.Fatal(shared.ErrOp.ExitCode,
+				"failed to start vm {{index .id}} on proxmox. Cause: {{index .cause}}",
+				map[string]interface{}{
+					"event": "vm_start_failed",
+					"id":    b.vmId,
+					"cause": err.Error(),
+				})
+			return err
+		}
+	}
+
+	b._output.Info("vm {{index .id}} is created on proxmox.",
+		map[string]interface{}{
+			"event": "vm_creation_success",
+			"id":    b.vmId,
+		})
+	return nil
 }
 
 func (b *basicArchetype) doCreateVM() error {
@@ -172,7 +199,7 @@ func (b *basicArchetype) doCreateVM() error {
 	)
 
 	if subject, err = common.ReadSubjectFromCache(); err != nil {
-		return common.GenericError(fmt.Errorf("failed to read ticket cache: %s\n", err.Error()))
+		return fmt.Errorf("unable to read ticket: %s", err.Error())
 	}
 
 	form := url.Values{}
@@ -189,26 +216,37 @@ func (b *basicArchetype) doCreateVM() error {
 	form.Set("net0", fmt.Sprintf("virtio,bridge=vmbr0"))
 
 	if req, err = http.NewRequest(http.MethodPost, qemuUrl(subject.ApiServer, b.node), strings.NewReader(form.Encode())); err != nil {
-		return common.GenericError(err)
+		return err
 	} else if req, err = common.WithHttpCredentials(req); err != nil {
-		return common.ProxmoxError(fmt.Errorf("unable to locate session: %s", err.Error()))
+		return err
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	client := common.HttpClient()
 	if resp, err = client.Do(req); err != nil {
-		return common.ProxmoxError(err)
+		return err
 	}
 	defer resp.Body.Close()
 
+	b._output.Debug("create vm request status: {{index .code}}.",
+		map[string]interface{}{
+			"event":  "http_response",
+			"code":   resp.StatusCode,
+			"status": resp.Status,
+		})
+
 	if resp.StatusCode != http.StatusOK {
-		return common.ProxmoxError(fmt.Errorf("failed to create VM: %s\n", resp.Status))
+		return fmt.Errorf("create vm request non-200 code: %d", resp.StatusCode)
 	}
 
 	if body, err := ioutil.ReadAll(resp.Body); err != nil {
-		return common.GenericError(err)
+		return shared.ErrParse
 	} else {
-		fmt.Fprintln(os.Stdout, string(body))
+		b._output.Debug("http response body:\n\n{{index .content}}\n",
+			map[string]interface{}{
+				"event":   "http_response",
+				"content": string(body),
+			})
 	}
 
 	return nil
@@ -223,26 +261,32 @@ func (b *basicArchetype) startVM() error {
 	)
 
 	if subject, err = common.ReadSubjectFromCache(); err != nil {
-		return common.GenericError(fmt.Errorf("failed to read ticket cache: %s\n", err.Error()))
+		return fmt.Errorf("unable to read ticket: %s", err.Error())
 	}
 
 	if req, err = http.NewRequest(http.MethodPost, qemuStartUrl(subject.ApiServer, b.node, b.vmId), nil); err != nil {
-		return common.GenericError(err)
+		return err
 	} else if req, err = common.WithHttpCredentials(req); err != nil {
-		return common.ProxmoxError(err)
+		return err
 	}
 
 	client := common.HttpClient()
 	if resp, err = client.Do(req); err != nil {
-		return common.ProxmoxError(err)
+		return err
 	}
 	defer resp.Body.Close()
 
+	b._output.Debug("start vm request status: {{index .code}}.",
+		map[string]interface{}{
+			"event":  "http_response",
+			"code":   resp.StatusCode,
+			"status": resp.Status,
+		})
+
 	if resp.StatusCode != http.StatusOK {
-		return common.ProxmoxError(fmt.Errorf("failed to start VM: %s\n", resp.Status))
+		return fmt.Errorf("start vm request non-200 code: %d", resp.StatusCode)
 	}
 
-	fmt.Fprintf(os.Stdout, "VM %s started.\n", b.vmId)
 	return nil
 }
 
