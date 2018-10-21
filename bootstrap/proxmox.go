@@ -41,15 +41,34 @@ func (p *proxmoxProvider) CreateVM(vm *VM, images []*Image) error {
 		return err
 	}
 
+	output.Info("Ensuring image {{index .imageName}} exists. Necessary downloads may take a while.",
+		map[string]interface{}{
+			"event": "pre_ensure_image",
+			"imageName": image.Name,
+		})
 	if dlImagePath, err = p.ensureImage(vm, image); err != nil {
 		return err
 	}
+	output.Info("Image {{index .imageName}} now exists at {{index .path}}",
+		map[string]interface{}{
+			"event": "post_ensure_image",
+			"imageName": image.Name,
+			"path": dlImagePath,
+		})
 
+	output.Info("Processing image {{index .path}}.",
+		map[string]interface{}{
+			"event": "pre_process_image",
+			"path": dlImagePath,
+		})
 	if autoImagePath, err = p.createAutoInstallImage(vm, image, dlImagePath); err != nil {
 		return err
 	}
-
-	fmt.Println(autoImagePath)
+	output.Info("Processed image. New image at {{index .path}}",
+		map[string]interface{}{
+			"event": "post_process_image",
+			"path": autoImagePath,
+		})
 
 	return nil
 }
@@ -105,7 +124,7 @@ func (p *proxmoxProvider) createAutoInstallImage(vm *VM, image *Image, downloade
 	}
 	isoAuto := exec.Command("homelab", isoAutoArgs...)
 
-	result, err := shared.HandledJson(isoAuto.CombinedOutput())(func(data map[string]interface{}) (interface{}, error) {
+	result, err := shared.HandleOutput(output)(isoAuto.CombinedOutput())(func(data map[string]interface{}) (interface{}, error) {
 		if len(data) > 0 {
 			switch strings.ToLower(data["event"].(string)) {
 			case "remaster-success":
@@ -156,7 +175,7 @@ func (p *proxmoxProvider) ensureImage(vm *VM, image *Image) (file string, err er
 	}
 	isoGet := exec.Command("homelab", isoGetArgs...)
 
-	result, err := shared.HandledJson(isoGet.CombinedOutput())(func(data map[string]interface{}) (interface{}, error) {
+	result, err := shared.HandleOutput(output)(isoGet.CombinedOutput())(func(data map[string]interface{}) (interface{}, error) {
 		if len(data) > 0 {
 			switch strings.ToUpper(data["level"].(string)) {
 			case "INFO", "DEBUG":
