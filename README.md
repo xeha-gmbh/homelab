@@ -17,8 +17,8 @@ The rest of the provisioning work can be handed over to Ansible. Although
 
 ```bash
 $ sudo -s
-$ homelab bootstrap -c config.yaml
-```
+$ homelab bootstrap --config ./examples/k8s.yaml 
+``
 
 ## Commands
 
