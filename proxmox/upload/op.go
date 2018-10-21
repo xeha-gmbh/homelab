@@ -5,14 +5,16 @@ import (
 	"errors"
 	"fmt"
 	"github.com/imulab/homelab/proxmox/common"
+	"github.com/imulab/homelab/proxmox/login"
+	"github.com/imulab/homelab/shared"
 	"net/http"
-	"os"
 	"os/exec"
 	"strings"
 )
 
 // Arguments for 'proxmox upload' command.
 type ProxmoxUploadRequest struct {
+	shared.ExtraArgs
 	Node    string
 	Storage string
 	File    string
@@ -48,10 +50,16 @@ func (ur *ProxmoxUploadRequest) doUpload() error {
 			"--form", fmt.Sprintf("content=%s", ur.Format),
 			"--form", fmt.Sprintf("filename=@%s", ur.File),
 			uploadUrl(subject.ApiServer, ur.Node, ur.Storage))
-		if r, err := curl.Output(); err != nil {
-			return common.ProxmoxError(err)
-		} else {
-			fmt.Fprintf(os.Stdout, string(r))
+		r, err := curl.CombinedOutput()
+		if len(r) > 0 {
+			output.Debug("\ncurl command output:\n\n {{index .output}}\n",
+				map[string]interface{}{
+					"event":  "curl_output",
+					"output": string(r),
+				})
+		}
+		if err != nil {
+			return err
 		}
 	}
 
@@ -69,29 +77,36 @@ func (ur *ProxmoxUploadRequest) matchFirstStorageDevice() (string, error) {
 	)
 
 	if subject, err = common.ReadSubjectFromCache(); err != nil {
-		return "", common.GenericError(fmt.Errorf("failed to read ticket cache: %s", err.Error()))
+		return "", fmt.Errorf("unable to read ticket cache: %s", err.Error())
 	}
 
 	if req, err = http.NewRequest(http.MethodGet, getStorageUrl(subject.ApiServer, ur.Node), nil); err != nil {
-		return "", common.GenericError(err)
+		return "", err
 	} else if req, err = common.WithHttpCredentials(req); err != nil {
-		return "", common.GenericError(err)
+		return "", err
 	}
 
 	if resp, err = client.Do(req); err != nil {
-		return "", common.ProxmoxError(err)
+		return "", err
 	}
 	defer resp.Body.Close()
 
+	output.Debug("get storage request http code: {{index .code}}",
+		map[string]interface{}{
+			"event":  "http_response",
+			"code":   resp.StatusCode,
+			"status": resp.Status,
+		})
+
 	if resp.StatusCode == http.StatusUnauthorized {
-		return "", common.ProxmoxError(errors.New("authentication failure. try 'proxmox login'"))
+		return "", login.ErrAuth
 	} else if resp.StatusCode != http.StatusOK {
-		return "", common.ProxmoxError(errors.New("request failure"))
+		return "", errors.New("get storage failed")
 	}
 
 	respData := make(map[string]interface{})
 	if err = json.NewDecoder(resp.Body).Decode(&respData); err != nil {
-		return "", common.GenericError(err)
+		return "", shared.ErrParse
 	}
 
 	for _, each := range respData["data"].([]interface{}) {
@@ -103,7 +118,7 @@ func (ur *ProxmoxUploadRequest) matchFirstStorageDevice() (string, error) {
 		}
 	}
 
-	return "", common.GenericError(fmt.Errorf("no available storage device to handle %s", ur.Format))
+	return "", errors.New("no storage device match")
 }
 
 func uploadUrl(base, node, storage string) string {

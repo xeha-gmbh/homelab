@@ -1,20 +1,16 @@
 package upload
 
 import (
-	"errors"
-	"github.com/imulab/homelab/proxmox/common"
+	"github.com/imulab/homelab/proxmox/upload/api"
+	"github.com/imulab/homelab/shared"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
+	"os"
 	"os/exec"
 )
 
-const (
-	FlagNode    = "node"
-	FlagStorage = "storage"
-	FlagFile    = "file"
-	FlagFormat  = "format"
-
-	DefaultFormat = "iso"
+var (
+	output shared.MessagePrinter
 )
 
 func NewProxmoxUploadCommand() *cobra.Command {
@@ -23,26 +19,52 @@ func NewProxmoxUploadCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "upload",
 		Short: "upload file to Proxmox storage device",
-		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			if err := checkCurlIsOnPath(); err != nil {
-				return common.HandleError(err)
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			cmd.SetOutput(os.Stdout)
+
+			if err := cmd.ParseFlags(args); err != nil {
+				return err
 			}
+
+			output = shared.WithConfig(cmd, &payload.ExtraArgs)
+
+			if err := checkCurlIsOnPath(); err != nil {
+				output.Fatal(shared.ErrDependency.ExitCode,
+					"Dependency unmet. Cause: {{index .cause}}",
+					map[string]interface{}{
+						"event": "pre_failed",
+						"cause": err.Error(),
+					})
+				return shared.ErrDependency
+			}
+
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			var (
-				err error
-			)
+			var err error
 
 			err = payload.Upload()
 			if err != nil {
-				return common.HandleError(err)
+				output.Fatal(shared.ErrOp.ExitCode,
+					"Upload file {{index .file}} failed. Cause: {{index .cause}}",
+					map[string]interface{}{
+						"event": "upload_failed",
+						"file":  payload.File,
+						"cause": err.Error(),
+					})
+				return shared.ErrOp
 			}
 
+			output.Info("Upload file {{index .file}} is successful.",
+				map[string]interface{}{
+					"event": "upload_success",
+					"file": payload.File,
+				})
 			return nil
 		},
 	}
 
+	payload.InjectExtraArgs(cmd)
 	addProxmoxLoginCommandFlags(cmd.PersistentFlags(), payload)
 	markProxmoxUploadCommandRequiredFlags(cmd)
 
@@ -52,8 +74,8 @@ func NewProxmoxUploadCommand() *cobra.Command {
 // Mark required upload command flags
 func markProxmoxUploadCommandRequiredFlags(cmd *cobra.Command) {
 	for _, f := range []string{
-		FlagNode,
-		FlagFile,
+		api.FlagNode,
+		api.FlagFile,
 	} {
 		cmd.MarkPersistentFlagRequired(f)
 		cmd.MarkFlagRequired(f)
@@ -63,27 +85,27 @@ func markProxmoxUploadCommandRequiredFlags(cmd *cobra.Command) {
 // Bind proxmox upload command flags to ProxmoxUploadRequest structure.
 func addProxmoxLoginCommandFlags(flagSet *flag.FlagSet, payload *ProxmoxUploadRequest) {
 	flagSet.StringVar(
-		&payload.Node, FlagNode, "",
+		&payload.Node, api.FlagNode, "",
 		"The Proxmox cluster node that the upload operation targets. Required.",
 	)
 	flagSet.StringVar(
-		&payload.Storage, FlagStorage, "",
+		&payload.Storage, api.FlagStorage, "",
 		"The storage device label to upload file to. "+
 			"If not set, command will query the node specified by --node to match the first storage device that accepts the file format --format.",
 	)
 	flagSet.StringVar(
-		&payload.File, FlagFile, "",
+		&payload.File, api.FlagFile, "",
 		"The absolute path to the file to upload. Required.",
 	)
 	flagSet.StringVar(
-		&payload.Format, FlagFormat, DefaultFormat,
+		&payload.Format, api.FlagFormat, api.DefaultFormat,
 		"The format of the file specified.",
 	)
 }
 
 func checkCurlIsOnPath() error {
 	if _, err := exec.LookPath("curl"); err != nil {
-		return common.GenericError(errors.New("curl is not installed"))
+		return err
 	}
 	return nil
 }
