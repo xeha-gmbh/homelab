@@ -263,7 +263,7 @@ func (p *proxmoxProvider) createAutoInstallImage(vm *VM, image *Image, downloade
 			"--ip-address", params.Network.Ip,
 			"--net-mask", params.Network.Mask,
 			"--gateway", params.Network.Gateway,
-			"--name-servers", strings.Join(params.Network.Dns, ","),
+			"--name-servers", strings.Join(params.Network.Dns, " "),
 		}...)
 	default:
 		return "", fmt.Errorf("unknown archetype %s", vm.Archetype)

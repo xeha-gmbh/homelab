@@ -45,6 +45,8 @@ vms:
         mask: 255.255.255.0
         gateway: 192.168.100.1
         dns:
+          - 192.168.100.4
+          - 1.1.1.1
           - 8.8.8.8
       system:
         timezone: America/Toronto

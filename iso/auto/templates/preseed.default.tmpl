@@ -19,12 +19,12 @@ d-i netcfg/choose_interface                                 select      auto
 {{if eq .IpAddress ""}}
 d-i netcfg/dhcp_timeout                                     string      5
 {{else}}
-d-i netcfg/disable_autoconfig 								boolean 	true
+d-i netcfg/disable_autoconfig                               boolean     true
 d-i netcfg/get_ipaddress                                    string      {{.IpAddress}}
 d-i netcfg/get_netmask                                      string      {{.NetMask}}
 d-i netcfg/get_gateway                                      string      {{.Gateway}}
 d-i netcfg/get_nameservers                                  string      {{.NameServers}}
-d-i netcfg/confirm_static 									boolean 	true
+d-i netcfg/confirm_static                                   boolean     true
 {{end}}
 d-i netcfg/get_hostname                                     string      {{.Hostname}}
 d-i netcfg/get_domain                                       string      {{.Domain}}
@@ -82,7 +82,7 @@ d-i partman-auto-lvm/guided_size                            string      max
 d-i partman-partitioning/confirm_write_new_label            boolean     true
 
 # install package
-d-i pkgsel/include                                          string      openssh-server build-essential
+d-i pkgsel/include                                          string      openssh-server
 
 # grub boot loader
 d-i grub-installer/only_debian                              boolean     true
