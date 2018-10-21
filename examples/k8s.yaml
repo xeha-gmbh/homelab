@@ -34,8 +34,8 @@ vms:
       store: local
     archetype: basic
     params:
-      cpu: 2
-      memory: 2048M
+      cpu: 4
+      memory: 8192M
       drive:
         store: local-data
         size: 64G
@@ -53,5 +53,75 @@ vms:
         username: imulab
         password: <redacted>
         hostname: kube-master
+        domain: imulab.io
+    start: true
+
+  # second VM
+  - id: "111"
+    name: kube-worker-1
+    provider:
+      name: proxmox
+      args:
+        force-login: true
+        node: pve
+    image:
+      name: bionic64-default
+      store: local
+    archetype: basic
+    params:
+      cpu: 6
+      memory: 12288M
+      drive:
+        store: local-data
+        size: 64G
+      network:
+        interface: vmbr0
+        ip: 192.168.100.31
+        mask: 255.255.255.0
+        gateway: 192.168.100.1
+        dns:
+        - 192.168.100.4
+        - 1.1.1.1
+        - 8.8.8.8
+      system:
+        timezone: America/Toronto
+        username: imulab
+        password: <redacted>
+        hostname: kube-worker-1
+        domain: imulab.io
+    start: true
+
+# second VM
+  - id: "112"
+    name: kube-worker-2
+    provider:
+      name: proxmox
+      args:
+        force-login: true
+        node: pve
+    image:
+      name: bionic64-default
+      store: local
+    archetype: basic
+    params:
+      cpu: 6
+      memory: 12288M
+      drive:
+        store: local-data
+        size: 64G
+      network:
+        interface: vmbr0
+        ip: 192.168.100.32
+        mask: 255.255.255.0
+        gateway: 192.168.100.1
+        dns:
+        - 192.168.100.4
+        - 1.1.1.1
+        - 8.8.8.8
+      system:
+        timezone: America/Toronto
+        username: imulab
+        password: <redacted>
+        hostname: kube-worker-2
         domain: imulab.io
     start: true
