@@ -70,7 +70,153 @@ func (p *proxmoxProvider) CreateVM(vm *VM, images []*Image) error {
 			"path":  autoImagePath,
 		})
 
+	output.Info("Uploading image {{index .path}}.",
+		map[string]interface{}{
+			"event": "pre_upload_image",
+			"path":  autoImagePath,
+		})
+	if err = p.uploadAutoInstallImage(vm, image, autoImagePath); err != nil {
+		return err
+	}
+	output.Info("Image {{index .path}} uploaded.",
+		map[string]interface{}{
+			"event": "post_upload_image",
+			"path":  autoImagePath,
+		})
+
+	output.Info("Creating VM {{index .id}}.",
+		map[string]interface{}{
+			"event": "pre_create_vm",
+			"id":    vm.Id,
+		})
+	if err = p.createAndStartVM(vm, autoImagePath); err != nil {
+		return err
+	}
+	output.Info("VM {{index .id}} created.",
+		map[string]interface{}{
+			"event": "post_create_vm",
+			"id":    vm.Id,
+		})
+
 	return nil
+}
+
+func (p *proxmoxProvider) createAndStartVM(vm *VM, filePath string) error {
+	var err error
+
+	if err = p.ensureLoggedIn(vm); err != nil {
+		return err
+	} else {
+		output.Info("User logged in.", map[string]interface{}{})
+	}
+
+	proxmoxVmCreateArgs := []string{
+		"proxmox",
+		"vm",
+		"create",
+		vm.Archetype,
+		"--output-format", shared.OutputFormatJson,
+		"--start",
+	}
+	switch vm.Archetype {
+	case basicArchetype:
+		params := vm.Params.(*proxmoxBasicArchetypeParams)
+		proxmoxVmCreateArgs = append(proxmoxVmCreateArgs, []string{
+			"--id", vm.Id,
+			"--name", vm.Name,
+			"--node", vm.Provider.Args["node"].(string),
+			"--core", fmt.Sprintf("%d", params.Cpu),
+			"--memory", fmt.Sprintf("%d", params.MemoryMB()),
+			"--drive-size", fmt.Sprintf("%d", params.DriveGB()),
+			"--drive-storage", params.Drive.Store,
+			"--iso-image", filepath.Base(filePath),
+			"--iso-storage", vm.Image.Store,
+			"--iface", params.Network.Interface,
+		}...)
+	default:
+		return fmt.Errorf("unknown archetype %s", vm.Archetype)
+	}
+	proxmoxVmCreate := exec.Command("homelab", proxmoxVmCreateArgs...)
+
+	_, err = shared.HandleOutput(output)(proxmoxVmCreate.CombinedOutput())(func(data map[string]interface{}) (interface{}, error) {
+		if len(data) > 0 {
+			if strings.ToUpper(data["level"].(string)) == "ERROR" {
+				return nil, errors.New(data["message"].(string))
+			}
+		}
+		return nil, nil
+	})
+
+	return err
+}
+
+func (p *proxmoxProvider) uploadAutoInstallImage(vm *VM, image *Image, filePath string) error {
+	var err error
+
+	if err = p.ensureLoggedIn(vm); err != nil {
+		return err
+	} else {
+		output.Info("User logged in.", map[string]interface{}{})
+	}
+
+	proxmoxUploadArgs := []string{
+		"proxmox",
+		"upload",
+		"--node", vm.Provider.Args["node"].(string),
+		"--file", filePath,
+		"--format", image.Format,
+		"--node", vm.Provider.Args["node"].(string),
+		"--storage", vm.Image.Store,
+		"--output-format", shared.OutputFormatJson,
+	}
+	if extraArgs.Debug {
+		proxmoxUploadArgs = append(proxmoxUploadArgs, "--debug")
+	}
+	proxmoxUpload := exec.Command("homelab", proxmoxUploadArgs...)
+
+	_, err = shared.HandleOutput(output)(proxmoxUpload.CombinedOutput())(func(data map[string]interface{}) (interface{}, error) {
+		if len(data) > 0 {
+			if strings.ToUpper(data["level"].(string)) == "ERROR" {
+				return nil, errors.New(data["message"].(string))
+			}
+		}
+		return nil, nil
+	})
+
+	return err
+}
+
+func (p *proxmoxProvider) ensureLoggedIn(vm *VM) error {
+	var err error
+
+	proxmoxLoginArgs := []string{
+		"proxmox",
+		"login",
+		"--username", p.Identity.Username,
+		"--password", p.Identity.Password,
+		"--realm", p.Identity.Realm,
+		"--api-server", p.Api,
+		"--force",
+		"--output-format", shared.OutputFormatJson,
+	}
+	if vm.Provider.Args["force-login"].(bool) {
+		proxmoxLoginArgs = append(proxmoxLoginArgs, "--force")
+	}
+	if extraArgs.Debug {
+		proxmoxLoginArgs = append(proxmoxLoginArgs, "--debug")
+	}
+	proxmoxLogin := exec.Command("homelab", proxmoxLoginArgs...)
+
+	_, err = shared.HandleOutput(output)(proxmoxLogin.CombinedOutput())(func(data map[string]interface{}) (interface{}, error) {
+		if len(data) > 0 {
+			if strings.ToUpper(data["level"].(string)) == "ERROR" {
+				return nil, errors.New(data["message"].(string))
+			}
+		}
+		return nil, nil
+	})
+
+	return err
 }
 
 func (p *proxmoxProvider) createAutoInstallImage(vm *VM, image *Image, downloadedImagePath string) (string, error) {

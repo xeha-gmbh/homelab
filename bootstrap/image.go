@@ -44,6 +44,7 @@ type Image struct {
 	Auto    bool   `yaml:"auto"`
 	UsbBoot bool   `yaml:"usb-boot"`
 	Reuse   bool   `yaml:"reuse"`
+	Format  string `yaml:"format"`
 }
 
 const (
