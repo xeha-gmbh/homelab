@@ -20,10 +20,10 @@ d-i netcfg/choose_interface                                 select      auto
 d-i netcfg/dhcp_timeout                                     string      5
 {{else}}
 d-i netcfg/disable_autoconfig 								boolean 	true
-d-i netcfg/get_ipaddress 									string 		{{.IpAddress}}
-d-i netcfg/get_netmask 										string 		{{.NetMask}}
-d-i netcfg/get_gateway 										string 		{{.Gateway}}
-d-i netcfg/get_nameservers 									string 		{{.NameServers}}
+d-i netcfg/get_ipaddress                                    string      {{.IpAddress}}
+d-i netcfg/get_netmask                                      string      {{.NetMask}}
+d-i netcfg/get_gateway                                      string      {{.Gateway}}
+d-i netcfg/get_nameservers                                  string      {{.NameServers}}
 d-i netcfg/confirm_static 									boolean 	true
 {{end}}
 d-i netcfg/get_hostname                                     string      {{.Hostname}}
@@ -45,8 +45,8 @@ d-i passwd/root-login                                       boolean     false
 d-i passwd/make-user                                        boolean     true
 d-i passwd/user-fullname                                    string      {{.Username}}
 d-i passwd/username                                         string      {{.Username}}
-d-i passwd/user-password 									password 	{{.Password}}
-d-i passwd/user-password-again 								password	{{.Password}}
+d-i passwd/user-password                                    password    {{.Password}}
+d-i passwd/user-password-again                              password    {{.Password}}
 d-i passwd/user-uid                                         string
 d-i user-setup/allow-password-weak                          boolean     false
 d-i passwd/user-default-groups                              string      adm cdrom dialout lpadmin plugdev sambashare
@@ -80,6 +80,9 @@ d-i partman-md/confirm_nooverwrite                          boolean     true
 d-i partman-auto/method                                     string      lvm
 d-i partman-auto-lvm/guided_size                            string      max
 d-i partman-partitioning/confirm_write_new_label            boolean     true
+
+# install package
+d-i pkgsel/include                                          string      openssh-server build-essential
 
 # grub boot loader
 d-i grub-installer/only_debian                              boolean     true
