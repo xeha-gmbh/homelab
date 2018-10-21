@@ -43,7 +43,7 @@ func (p *proxmoxProvider) CreateVM(vm *VM, images []*Image) error {
 
 	output.Info("Ensuring image {{index .imageName}} exists. Necessary downloads may take a while.",
 		map[string]interface{}{
-			"event": "pre_ensure_image",
+			"event":     "pre_ensure_image",
 			"imageName": image.Name,
 		})
 	if dlImagePath, err = p.ensureImage(vm, image); err != nil {
@@ -51,15 +51,15 @@ func (p *proxmoxProvider) CreateVM(vm *VM, images []*Image) error {
 	}
 	output.Info("Image {{index .imageName}} now exists at {{index .path}}",
 		map[string]interface{}{
-			"event": "post_ensure_image",
+			"event":     "post_ensure_image",
 			"imageName": image.Name,
-			"path": dlImagePath,
+			"path":      dlImagePath,
 		})
 
 	output.Info("Processing image {{index .path}}.",
 		map[string]interface{}{
 			"event": "pre_process_image",
-			"path": dlImagePath,
+			"path":  dlImagePath,
 		})
 	if autoImagePath, err = p.createAutoInstallImage(vm, image, dlImagePath); err != nil {
 		return err
@@ -67,7 +67,7 @@ func (p *proxmoxProvider) CreateVM(vm *VM, images []*Image) error {
 	output.Info("Processed image. New image at {{index .path}}",
 		map[string]interface{}{
 			"event": "post_process_image",
-			"path": autoImagePath,
+			"path":  autoImagePath,
 		})
 
 	return nil

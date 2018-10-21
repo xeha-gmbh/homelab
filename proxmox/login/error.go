@@ -1,14 +1,9 @@
 package login
 
-import "github.com/imulab/homelab/proxmox/common"
-
-const (
-	AuthenticationErrorExitCode = 10
+import (
+	"github.com/imulab/homelab/shared"
 )
 
-func authenticationError(err error) error {
-	return &common.CommandError{
-		Err:  err,
-		Code: AuthenticationErrorExitCode,
-	}
-}
+var (
+	ErrAuth = shared.ErrorFactory(10)("authentication_error")
+)

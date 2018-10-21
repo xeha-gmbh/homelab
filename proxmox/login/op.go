@@ -2,16 +2,16 @@ package login
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/imulab/homelab/proxmox/common"
+	"github.com/imulab/homelab/shared"
 	"net/http"
 	"net/url"
-	"os"
 )
 
 // Arguments for the 'proxmox login' command
 type ProxmoxLoginRequest struct {
+	shared.ExtraArgs
 	Username  string
 	Password  string
 	Realm     string
@@ -26,7 +26,7 @@ func (pl *ProxmoxLoginRequest) Login() (*common.ProxmoxSubject, bool, error) {
 		s, e := pl.doLogin()
 		return s, true, e
 	} else {
-		fmt.Fprintf(os.Stdout, "Ticket exists in cache.\n")
+		output.Info("Ticket exists in cache.", map[string]interface{}{})
 		return cachedSubject, false, nil
 	}
 }
@@ -55,18 +55,25 @@ func (pl *ProxmoxLoginRequest) doLogin() (*common.ProxmoxSubject, error) {
 	}
 	defer resp.Body.Close()
 
+	output.Debug("Login request return status code {{index .code}}",
+		map[string]interface{}{
+			"event":  "login_response",
+			"code":   resp.StatusCode,
+			"status": resp.Status,
+		})
+
 	if resp.StatusCode == http.StatusUnauthorized {
-		return nil, authenticationError(errors.New("authentication failure"))
+		return nil, ErrAuth
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, common.ProxmoxError(errors.New("request failure"))
+		return nil, ErrAuth
 	}
 
 	respData := make(map[string]interface{})
 	err = json.NewDecoder(resp.Body).Decode(&respData)
 	if err != nil {
-		return nil, common.GenericError(err)
+		return nil, shared.ErrParse
 	}
 
 	subject := &common.ProxmoxSubject{
@@ -76,7 +83,11 @@ func (pl *ProxmoxLoginRequest) doLogin() (*common.ProxmoxSubject, error) {
 		ApiServer: pl.ApiServer,
 	}
 
-	fmt.Fprintf(os.Stdout, "User '%s' successfully logged in.\n", subject.Username)
+	output.Info("User {{index .user}} is now logged in.",
+		map[string]interface{}{
+			"event": "login_success",
+			"user":  subject.Username,
+		})
 	return subject, nil
 }
 

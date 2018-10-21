@@ -2,20 +2,15 @@ package login
 
 import (
 	"github.com/imulab/homelab/proxmox/common"
+	"github.com/imulab/homelab/proxmox/login/api"
+	. "github.com/imulab/homelab/shared"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
+	"os"
 )
 
-const (
-	FlagUsername  = "username"
-	FlagPassword  = "password"
-	FlagRealm     = "realm"
-	FlagApiServer = "api-server"
-	FlagForce     = "force"
-
-	DefaultUsername = "root"
-	DefaultRealm    = "pam"
-	DefaultForce    = false
+var (
+	output MessagePrinter
 )
 
 // Returns the 'login' command. This command expects to be installed
@@ -26,6 +21,14 @@ func NewProxmoxLoginCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "login",
 		Short: "login user with username and password",
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			cmd.SetOutput(os.Stdout)
+			if err := cmd.ParseFlags(args); err != nil {
+				return err
+			}
+			output = WithConfig(cmd, &payload.ExtraArgs)
+			return nil
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var (
 				err          error
@@ -35,13 +38,25 @@ func NewProxmoxLoginCommand() *cobra.Command {
 
 			subject, isNewAttempt, err = payload.Login()
 			if err != nil {
-				return common.HandleError(err)
+				output.Fatal(ErrOp.ExitCode,
+					"Failed to login. Cause: {{index .cause}}",
+					map[string]interface{}{
+						"event": "login_failed",
+						"cause": err.Error(),
+					})
+				return ErrOp
 			}
 
 			if isNewAttempt {
 				err = common.WriteSubjectToCache(subject)
 				if err != nil {
-					return common.HandleError(err)
+					output.Fatal(ErrOp.ExitCode,
+						"Failed to save cache. Cause: {{index .cause}}",
+						map[string]interface{}{
+							"event": "cache_save_failed",
+							"cause": err.Error(),
+						})
+					return ErrOp
 				}
 			}
 
@@ -49,6 +64,7 @@ func NewProxmoxLoginCommand() *cobra.Command {
 		},
 	}
 
+	payload.InjectExtraArgs(cmd)
 	addProxmoxLoginCommandFlags(cmd.PersistentFlags(), payload)
 	markProxmoxLoginCommandRequiredFlags(cmd)
 
@@ -58,8 +74,8 @@ func NewProxmoxLoginCommand() *cobra.Command {
 // Mark required login command flags
 func markProxmoxLoginCommandRequiredFlags(cmd *cobra.Command) {
 	for _, f := range []string{
-		FlagPassword,
-		FlagApiServer,
+		api.FlagPassword,
+		api.FlagApiServer,
 	} {
 		cmd.MarkPersistentFlagRequired(f)
 		cmd.MarkFlagRequired(f)
@@ -69,23 +85,23 @@ func markProxmoxLoginCommandRequiredFlags(cmd *cobra.Command) {
 // Bind proxmox login command flags to ProxmoxLoginRequest structure.
 func addProxmoxLoginCommandFlags(flagSet *flag.FlagSet, payload *ProxmoxLoginRequest) {
 	flagSet.StringVar(
-		&payload.Username, FlagUsername, DefaultUsername,
+		&payload.Username, api.FlagUsername, api.DefaultUsername,
 		"The username that is authorized to carry out subsequent operations.",
 	)
 	flagSet.StringVar(
-		&payload.Password, FlagPassword, "",
+		&payload.Password, api.FlagPassword, "",
 		"The password for the user. Required.",
 	)
 	flagSet.StringVar(
-		&payload.Realm, FlagRealm, DefaultRealm,
+		&payload.Realm, api.FlagRealm, api.DefaultRealm,
 		"The realm in Proxmox to log into.",
 	)
 	flagSet.StringVar(
-		&payload.ApiServer, FlagApiServer, "",
+		&payload.ApiServer, api.FlagApiServer, "",
 		"The address for the Proxmox API server. API paths will be appended to this address. Required.",
 	)
 	flagSet.BoolVar(
-		&payload.Force, FlagForce, DefaultForce,
+		&payload.Force, api.FlagForce, api.DefaultForce,
 		"If set, command will ignore existing ticket cache and force a re-login.",
 	)
 }

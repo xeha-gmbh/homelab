@@ -2,7 +2,6 @@ package common
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"os/user"
@@ -59,7 +58,6 @@ func WriteSubjectToCache(subject *ProxmoxSubject) error {
 		return err
 	}
 
-	fmt.Fprintln(os.Stdout, "Ticket cache written to", ticketCachePath)
 	return nil
 }
 
@@ -67,7 +65,6 @@ func WriteSubjectToCache(subject *ProxmoxSubject) error {
 // If current user home directory cannot be acquired, it defaults to current directory.
 func proxmoxTicketCache() string {
 	if u, err := user.Current(); err != nil {
-		fmt.Fprintln(os.Stdout, "Failed to resolve current user, default ticket cache to current directory.")
 		return TicketCache
 	} else {
 		return filepath.Join(u.HomeDir, TicketCache)
