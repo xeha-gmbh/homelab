@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/imulab/homelab/proxmox/common"
-	"github.com/imulab/homelab/proxmox/login"
 	"github.com/imulab/homelab/shared"
 	"net/http"
 	"os/exec"
@@ -99,7 +98,7 @@ func (ur *ProxmoxUploadRequest) matchFirstStorageDevice() (string, error) {
 		})
 
 	if resp.StatusCode == http.StatusUnauthorized {
-		return "", login.ErrAuth
+		return "", errors.New("auth-error")
 	} else if resp.StatusCode != http.StatusOK {
 		return "", errors.New("get storage failed")
 	}

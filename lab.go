@@ -6,35 +6,52 @@ import (
 	"github.com/imulab/homelab/bootstrap"
 	"github.com/imulab/homelab/iso"
 	"github.com/imulab/homelab/proxmox"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"os"
-	"sync"
+	"strings"
 )
 
-var (
-	once   sync.Once
-	labCmd *cobra.Command
-)
+func NewLabCommand() *cobra.Command {
+	var (
+		debug  bool
+		format string
+	)
 
-func GetLabCommand() *cobra.Command {
-	once.Do(func() {
-		labCmd = &cobra.Command{
-			Use:   "lab",
-			Short: "lab: easily configure the lab environment",
-			PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-				if err := cmd.ParseFlags(args); err != nil {
-					return err
-				}
-				return nil
-			},
-		}
+	labCmd := &cobra.Command{
+		Use:   "lab",
+		Short: "lab: easily configure the lab environment",
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			if err := cmd.ParseFlags(args); err != nil {
+				return err
+			}
 
-		labCmd.ResetFlags()
-		labCmd.AddCommand(proxmox.NewProxmoxCommand())
-		labCmd.AddCommand(iso.NewIsoCommand())
-		labCmd.AddCommand(bootstrap.NewBootstrapCommand())
-	})
+			if debug {
+				logrus.SetLevel(logrus.DebugLevel)
+			} else {
+				logrus.SetLevel(logrus.InfoLevel)
+			}
+
+			switch strings.ToLower(format) {
+			case "json":
+				logrus.SetFormatter(&logrus.JSONFormatter{})
+			default:
+				logrus.SetFormatter(&logrus.TextFormatter{})
+			}
+
+			return nil
+		},
+	}
+
+	labCmd.ResetFlags()
+
+	labCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", false, "whether to print debug messages.")
+	labCmd.PersistentFlags().StringVarP(&format, "output-format", "o", "text", "whether to print debug messages.")
+
+	labCmd.AddCommand(proxmox.NewProxmoxCommand())
+	labCmd.AddCommand(iso.NewIsoCommand())
+	labCmd.AddCommand(bootstrap.NewBootstrapCommand())
 
 	return labCmd
 }
@@ -44,7 +61,7 @@ func Run() error {
 
 	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
 
-	cmd := GetLabCommand()
+	cmd := NewLabCommand()
 	return cmd.Execute()
 }
 
