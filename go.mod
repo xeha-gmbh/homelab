@@ -1,4 +1,4 @@
-module github.com/imulab/homelab
+module github.com/xeha-gmbh/homelab
 
 require (
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect

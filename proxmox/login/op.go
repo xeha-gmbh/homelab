@@ -3,8 +3,8 @@ package login
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/imulab/homelab/proxmox/common"
-	"github.com/imulab/homelab/shared"
+	"github.com/xeha-gmbh/homelab/proxmox/common"
+	"github.com/xeha-gmbh/homelab/shared"
 	"net/http"
 	"net/url"
 )

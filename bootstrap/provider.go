@@ -2,7 +2,7 @@ package bootstrap
 
 import (
 	"fmt"
-	"github.com/imulab/homelab/shared"
+	"github.com/xeha-gmbh/homelab/shared"
 	"github.com/mitchellh/mapstructure"
 	"reflect"
 )

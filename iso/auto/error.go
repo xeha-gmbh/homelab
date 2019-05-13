@@ -1,6 +1,6 @@
 package auto
 
-import "github.com/imulab/homelab/shared"
+import "github.com/xeha-gmbh/homelab/shared"
 
 var (
 	ErrNoProvider = shared.ErrorFactory(10)("no-provider-error")

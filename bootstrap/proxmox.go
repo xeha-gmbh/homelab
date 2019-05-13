@@ -3,7 +3,7 @@ package bootstrap
 import (
 	"errors"
 	"fmt"
-	"github.com/imulab/homelab/shared"
+	"github.com/xeha-gmbh/homelab/shared"
 	"io"
 	"os"
 	"os/exec"

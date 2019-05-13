@@ -1,7 +1,7 @@
 package bootstrap
 
 import (
-	"github.com/imulab/homelab/shared"
+	"github.com/xeha-gmbh/homelab/shared"
 	"gopkg.in/yaml.v2"
 	"os"
 )

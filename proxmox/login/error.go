@@ -1,7 +1,7 @@
 package login
 
 import (
-	"github.com/imulab/homelab/shared"
+	"github.com/xeha-gmbh/homelab/shared"
 )
 
 var (

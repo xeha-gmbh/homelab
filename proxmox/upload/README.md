@@ -4,7 +4,7 @@ This command calls out to the specified Proxmox API server endpoint at `/api2/js
 and uploads the image. If user didn't specify the storage device, it will call out to `/api2/json/nodes/%s/storage` and
 obtain the first storage device that can accept the specified format.
 
-This command requires authentication. Unless a ticket cache is already saved, use [Proxmox Login Command](https://github.com/imulab/homelab/tree/master/proxmox/login) first.
+This command requires authentication. Unless a ticket cache is already saved, use [Proxmox Login Command](https://github.com/xeha-gmbh/homelab/tree/master/proxmox/login) first.
 
 Attempts were made to utilize native Go API (namely the `multipart` package) to do the upload directly, however, it didn't
 seem to play well with the Proxmox Upload API. Hence, the currently implementation uses `curl` command in insecure mode.

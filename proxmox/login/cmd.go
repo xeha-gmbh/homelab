@@ -1,9 +1,9 @@
 package login
 
 import (
-	"github.com/imulab/homelab/proxmox/common"
-	"github.com/imulab/homelab/proxmox/login/api"
-	. "github.com/imulab/homelab/shared"
+	"github.com/xeha-gmbh/homelab/proxmox/common"
+	"github.com/xeha-gmbh/homelab/proxmox/login/api"
+	. "github.com/xeha-gmbh/homelab/shared"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 	"os"

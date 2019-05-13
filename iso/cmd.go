@@ -1,8 +1,8 @@
 package iso
 
 import (
-	"github.com/imulab/homelab/iso/auto"
-	"github.com/imulab/homelab/iso/get"
+	"github.com/xeha-gmbh/homelab/iso/auto"
+	"github.com/xeha-gmbh/homelab/iso/get"
 	"github.com/spf13/cobra"
 )
 

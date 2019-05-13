@@ -2,8 +2,8 @@ package vm
 
 import (
 	"fmt"
-	"github.com/imulab/homelab/proxmox/common"
-	"github.com/imulab/homelab/shared"
+	"github.com/xeha-gmbh/homelab/proxmox/common"
+	"github.com/xeha-gmbh/homelab/shared"
 	"github.com/lithammer/dedent"
 	"github.com/spf13/cobra"
 	"io/ioutil"

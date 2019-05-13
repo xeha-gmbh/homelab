@@ -16,7 +16,7 @@ uses an external script and seed file to repack the installation media. The proc
 [ubuntu-unattended](https://github.com/netson/ubuntu-unattended) project.
 
 The command accepts user input, uses those input to parse the [preseed](https://www.debian.org/releases/wheezy/example-preseed.txt) 
-file and places it the workspace. The rest of the work is handed to the [script](https://github.com/imulab/homelab/blob/master/iso/auto/ubuntu/ubuntu-auto.sh). 
+file and places it the workspace. The rest of the work is handed to the [script](https://github.com/xeha-gmbh/homelab/blob/master/iso/auto/ubuntu/ubuntu-auto.sh). 
 The script downloads the flavor image if necessary, mounts it and copies it to a new location where real changes are made. 
 Then, the preseed file is copied in, updates the installation menu to accept the preseed file and repacks it as a new iso.
 

@@ -23,16 +23,16 @@ $ homelab bootstrap --config ./examples/k8s.yaml
 ## Commands
 
 The `bootstrap` command uses several sub-commands to achieve the overall effect:
-* [homelab iso auto](https://github.com/imulab/homelab/tree/master/iso/auto)
-* [homelab proxmox login](https://github.com/imulab/homelab/tree/master/proxmox/login)
-* [homelab proxmox upload](https://github.com/imulab/homelab/tree/master/proxmox/upload)
-* [homelab proxmox vm create](https://github.com/imulab/homelab/tree/master/proxmox/vm)
+* [homelab iso auto](https://github.com/xeha-gmbh/homelab/tree/master/iso/auto)
+* [homelab proxmox login](https://github.com/xeha-gmbh/homelab/tree/master/proxmox/login)
+* [homelab proxmox upload](https://github.com/xeha-gmbh/homelab/tree/master/proxmox/upload)
+* [homelab proxmox vm create](https://github.com/xeha-gmbh/homelab/tree/master/proxmox/vm)
 
 ## Develop
 
 Development requires Go 1.11 environment. 
 
-The [homelab iso auto](https://github.com/imulab/homelab/tree/master/iso/auto)
+The [homelab iso auto](https://github.com/xeha-gmbh/homelab/tree/master/iso/auto)
 command needs to be executed in a ubuntu environment. In case of debugging, `vagrant up` to setup the ubuntu environment.
 
-The [homelab proxmox](https://github.com/imulab/homelab/tree/master/proxmox) series commands obviously need a running Proxmox cluster.
+The [homelab proxmox](https://github.com/xeha-gmbh/homelab/tree/master/proxmox) series commands obviously need a running Proxmox cluster.

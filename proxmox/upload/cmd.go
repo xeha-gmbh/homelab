@@ -1,8 +1,8 @@
 package upload
 
 import (
-	"github.com/imulab/homelab/proxmox/upload/api"
-	"github.com/imulab/homelab/shared"
+	"github.com/xeha-gmbh/homelab/proxmox/upload/api"
+	"github.com/xeha-gmbh/homelab/shared"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 	"os"

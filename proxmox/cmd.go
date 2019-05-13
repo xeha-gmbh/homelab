@@ -1,9 +1,9 @@
 package proxmox
 
 import (
-	"github.com/imulab/homelab/proxmox/login"
-	"github.com/imulab/homelab/proxmox/upload"
-	"github.com/imulab/homelab/proxmox/vm"
+	"github.com/xeha-gmbh/homelab/proxmox/login"
+	"github.com/xeha-gmbh/homelab/proxmox/upload"
+	"github.com/xeha-gmbh/homelab/proxmox/vm"
 	"github.com/spf13/cobra"
 )
 

@@ -1,8 +1,8 @@
 package auto
 
 import (
-	"github.com/imulab/homelab/iso/auto/api"
-	. "github.com/imulab/homelab/shared"
+	"github.com/xeha-gmbh/homelab/iso/auto/api"
+	. "github.com/xeha-gmbh/homelab/shared"
 	"github.com/lithammer/dedent"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
@@ -46,7 +46,7 @@ func NewIsoAutoCommand() *cobra.Command {
 		Long: dedent.Dedent(`
 			This command accepts an unmodified OS installation media and attempts to convert it
 			into an unattended installation media by asking and answering all the installation
-			questions in advance. The first supported OS is Ubuntu 18.04 LTS 64-bit, also known as
+			questions in advance. The first supported OS is Ubuntu 18.04.2 LTS 64-bit, also known as
 			ubuntu/bionic64. Future OS support will be added when needed.
 
 			Thanks to https://github.com/netson/ubuntu-unattended for the wonderful script to pave
