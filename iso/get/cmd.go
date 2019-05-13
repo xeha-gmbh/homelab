@@ -2,12 +2,13 @@ package get
 
 import (
 	"errors"
-	. "github.com/imulab/homelab/shared"
-	"github.com/spf13/cobra"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	. "github.com/imulab/homelab/shared"
+	"github.com/spf13/cobra"
 )
 
 const (
@@ -19,9 +20,9 @@ const (
 	defaultReuse     = false
 
 	flavorUbuntuBionic64Live       = "ubuntu/bionic64.live"
-	flavorUbuntuBionic64LiveUrl    = "http://releases.ubuntu.com/bionic/ubuntu-18.04.1-live-server-amd64.iso"
+	flavorUbuntuBionic64LiveUrl    = "http://releases.ubuntu.com/bionic/ubuntu-18.04.2-live-server-amd64.iso"
 	flavorUbuntuBionic64NonLive    = "ubuntu/bionic64"
-	flavorUbuntuBionic64NonLiveUrl = "http://cdimage.ubuntu.com/ubuntu/releases/18.04/release/ubuntu-18.04.1-server-amd64.iso"
+	flavorUbuntuBionic64NonLiveUrl = "http://cdimage.ubuntu.com/ubuntu/releases/18.04/release/ubuntu-18.04.2-server-amd64.iso"
 	flavorUbuntuXenial64           = "ubuntu/xenial64"
 	flavorUbuntuXenial64Url        = "http://releases.ubuntu.com/xenial/ubuntu-16.04.5-server-amd64.iso"
 
