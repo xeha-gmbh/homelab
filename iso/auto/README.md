@@ -103,4 +103,4 @@ uses a mechanism of `answers.yaml` to prepare answers to all installation questi
 `squashfs-root/subiquity_config/`. The `squashfs-root` can be obtained by un-squashing `casper/filesystem.squashfs` using 
 `unsquashfs`. When modification is done, re-squash it using `mksquashfs`. This process should work, however, the subiquity
 project didn't provide examples as to how to configure static network. Hence, as of now, we are using a 
-[CD image download of Ubuntu 18.04 LTS](http://cdimage.ubuntu.com/ubuntu/releases/18.04/release/ubuntu-18.04.1-server-amd64.iso) which still ships with the old installer. 
+[CD image download of Ubuntu 18.04 LTS](http://cdimage.ubuntu.com/ubuntu/releases/18.04/release/ubuntu-18.04.2-server-amd64.iso) which still ships with the old installer. 
